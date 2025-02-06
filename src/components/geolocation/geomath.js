@@ -35,7 +35,7 @@ export const getAveragePrecipitationForPoint = async (pointCoord) => {
   }
 };
 
-export const getAveragePrecipitationForState = async (state, numOfPoints = 5) => {
+export const getAveragePrecipitationForState = async (state, numOfPoints = 10) => {
 
   let averageInState = 0;
 
@@ -87,7 +87,7 @@ export const getAllStatePolys = () => {
       allPolygons.push(polygon([feature.geometry.coordinates[0]], { name: feature.properties.name }));
     }
     if (feature.geometry.type === "MultiPolygon") {
-      allPolygons.push(multiPolygon([feature.geometry.coordinates[0]], { name: feature.properties.name }));
+      allPolygons.push(multiPolygon(feature.geometry.coordinates, { name: feature.properties.name }));
     }
   }
   return allPolygons;

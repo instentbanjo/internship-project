@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 import Coordinates from "@/views/Coordinates.vue";
 import WeatherAPi from "@/views/WeatherAPi.vue";
+import MapSelect from "@/views/MapSelect.vue";
 
 const routes = [
   {
@@ -13,6 +14,11 @@ const routes = [
     path: "/weatherApi",
     name: "weatherApi",
     component: WeatherAPi,
+  },
+  {
+    path: "/mapSelect",
+    name: "mapSelect",
+    component: MapSelect,
   },
   {
     path: "/coordinates",

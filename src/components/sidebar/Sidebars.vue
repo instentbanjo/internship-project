@@ -26,7 +26,7 @@ export default {
     <SidebarLink to="/" icon="fas fa-home">Home</SidebarLink>
     <SidebarLink to="/coordinates" icon="fas fa-location-dot">Coordinates</SidebarLink>
     <SidebarLink to="/weatherAPI" icon="fas fa-cloud-sun-rain">Weather API</SidebarLink>
-    <SidebarLink to="/comingSoon2" icon="fas fa-question">Coming Soon</SidebarLink>
+    <SidebarLink to="/mapSelect" icon="fas fa-map">Coming Soon</SidebarLink>
     <SidebarLink to="/comingSoon3" icon="fas fa-question">Coming Soon</SidebarLink>
 
     <span

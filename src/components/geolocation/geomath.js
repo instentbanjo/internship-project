@@ -79,6 +79,20 @@ export const findPointState = (coord) => {
   return 'State not found';
 };
 
+export const getAllStatePolys = () => {
+
+  let allPolygons = [];
+  for (const feature of statesData.features) {
+    if (feature.geometry.type === "Polygon") {
+      allPolygons.push(polygon([feature.geometry.coordinates[0]], { name: feature.properties.name }));
+    }
+    if (feature.geometry.type === "MultiPolygon") {
+      allPolygons.push(multiPolygon([feature.geometry.coordinates[0]], { name: feature.properties.name }));
+    }
+  }
+  return allPolygons;
+}
+
 export const isPointInStatePoly = (pointCoords, statePoly) => {
   let poly;
   //when a state is in a single polygon

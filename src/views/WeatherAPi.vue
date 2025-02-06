@@ -1,8 +1,7 @@
 <script>
 import {
   getAllStates,
-  getAveragePrecipitationForPoint,
-  getRainfallForPoint,
+  getAveragePrecipitationForPoint, getAveragePrecipitationForState,
   getSamplePointsInState
 } from "@/components/geolocation/geomath";
 
@@ -13,6 +12,7 @@ export default {
       states: [],
       selectedState: "",
       searchQuery: "",
+      averagePrecipitationForState: "",
       isDropdownOpen: false,
     };
   },
@@ -27,13 +27,14 @@ export default {
     this.states = getAllStates();
   },
   methods: {
+    getAveragePrecipitationForState,
     getSamplePointsInState,
     getAveragePrecipitationForPoint,
-    getRainfallForPoint,
-    selectState(state) {
+    async selectState(state) {
       this.selectedState = state;
       this.searchQuery = state;
       this.isDropdownOpen = false;
+      this.averagePrecipitationForState = await getAveragePrecipitationForState(this.selectedState);
     },
     handleBlur(event) {
       // Delay closing to allow click event on the dropdown
@@ -71,8 +72,8 @@ export default {
     </div>
   </div>
 
-  <button v-if="selectedState" @click="getSamplePointsInState(selectedState)">Get Weather</button>
   <p v-if="selectedState">Selected State: {{ selectedState }}</p>
+  <p v-if="averagePrecipitationForState">average Precipitation: {{ averagePrecipitationForState }}mm/h</p>
 </template>
 
 <style scoped>

@@ -1,5 +1,5 @@
 import statesData from "../../data/geojson/us-states.json"; // Adjust the path to the geojson file
-import { bbox, booleanPointInPolygon, multiPolygon, point, polygon, randomPoint } from "@turf/turf";
+import { bbox, booleanPointInPolygon, center, multiPolygon, point, polygon, randomPoint } from "@turf/turf";
 
 export const getAllStates = () => {
   const states = [];
@@ -8,7 +8,17 @@ export const getAllStates = () => {
   }
   return states
 }
+export const getAveragePrecipitationForState = async (state, numOfPoints = 10) => {
 
+  let averageInState = 0;
+
+  for (const point1 of getSamplePointsInState(numOfPoints, state)) {
+    const averageOnPoint = await getAveragePrecipitationForPoint([point1[1], point1[0]]);
+    averageInState += averageOnPoint;
+  }
+  console.log(averageInState / numOfPoints)
+  return averageInState / numOfPoints;
+}
 export const getAveragePrecipitationForPoint = async (pointCoord) => {
   const currentDate = new Date();
   const pastMonth = new Date(currentDate);
@@ -34,42 +44,45 @@ export const getAveragePrecipitationForPoint = async (pointCoord) => {
     return null;
   }
 };
+export const getHazardExtremsForPoint = async (pointCoord) => {
+  const currentDate = new Date();
+  const pastMonth = new Date(currentDate);
+  pastMonth.setMonth(currentDate.getMonth() - 12);
 
-export const getAveragePrecipitationForState = async (state, numOfPoints = 10) => {
+  const startDate = pastMonth.toISOString().split('T')[0];
+  const endDate = currentDate.toISOString().split('T')[0];
 
-  let averageInState = 0;
+  const url = `https://historical-forecast-api.open-meteo.com/v1/forecast?latitude=${pointCoord[1]}&longitude=${pointCoord[0]}&start_date=${startDate}&end_date=${endDate}&daily=temperature_2m_max,temperature_2m_min,wind_speed_10m_max&precipitation_unit=inch`;
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
 
-  for (const point1 of getSamplePointsInState(numOfPoints, state)) {
-    const averageOnPoint = await getAveragePrecipitationForPoint([point1[1], point1[0]]);
-    averageInState += averageOnPoint;
+    console.log(data.daily)
+
+  } catch (error) {
+    console.error("Error fetching weather data:", error);
+    return null;
   }
-  console.log(averageInState / numOfPoints)
-  return averageInState / numOfPoints;
-}
 
-export const getSamplePointsInState = (count, state) => {
-  let statePoly;
+}
+export const getStateHazardExtrems = async (state) => {
+  let points = getConsistentPointsInState(state);
+  points.forEach(async (point) => {
+    const hazard = await getHazardExtremsForPoint(point);
+    console.log(hazard)
+  });
+  return points
+}
+export const getStatePolygon = (state) => {
   let currentState = statesData.features.filter((s) => s.properties.name === state)[0];
   if (currentState.geometry.type === "Polygon") {
-    statePoly = polygon([currentState.geometry.coordinates[0]], { name: currentState.properties.name });
+    return  polygon([currentState.geometry.coordinates[0]], { name: currentState.properties.name });
   }
   //when a state is in multiple polygons
   else if (currentState.geometry.type === "MultiPolygon") {
-    statePoly = multiPolygon(currentState.geometry.coordinates, { name: currentState.properties.name });
+    return multiPolygon(currentState.geometry.coordinates, { name: currentState.properties.name });
   }
-
-  let points = [];
-  while (points.length < count) {
-    const [lon, lat] = randomPoint(1,  {bbox: bbox(statePoly)}).features[0].geometry.coordinates;
-    if (isPointInStatePoly([lon, lat], statePoly)) {
-      points.push([lon, lat]);
-    }
-  }
-return points;
-
-};
-
-
+}
 export const findPointState = (coord) => {
   for (const feature of statesData.features) {
     if (isPointInStatePoly(coord, feature)) {
@@ -78,7 +91,6 @@ export const findPointState = (coord) => {
   }
   return 'State not found';
 };
-
 export const getAllStatePolys = () => {
 
   let allPolygons = [];
@@ -92,7 +104,6 @@ export const getAllStatePolys = () => {
   }
   return allPolygons;
 }
-
 export const isPointInStatePoly = (pointCoords, statePoly) => {
   let poly;
   //when a state is in a single polygon
@@ -112,3 +123,48 @@ export const isPointInStatePoly = (pointCoords, statePoly) => {
   const pt = point(pointCoords);
   return booleanPointInPolygon(pt, poly);
 };
+export const getConsistentPointsInState = (state) => {
+  let points = [];
+  let statePoly = getStatePolygon(state);
+  let stateBbox = calculateBBox(getStatePolygon(state));
+  points.push([stateBbox[0], stateBbox[1]], [stateBbox[0], stateBbox[3]], [stateBbox[2], stateBbox[1]], [stateBbox[2], stateBbox[3]]);
+  points.push(center(statePoly).geometry.coordinates)
+  return points;
+};
+export const getSamplePointsInState = (count, state) => {
+  let statePoly = getStatePolygon(state)
+  let points = [];
+  while (points.length < count) {
+    const [lon, lat] = randomPoint(1,  {bbox: bbox(statePoly)}).features[0].geometry.coordinates;
+    if (isPointInStatePoly([lon, lat], statePoly)) {
+      points.push([lon, lat]);
+    }
+  }
+  console.log(points)
+  return points;
+
+};
+function calculateBBox(poly) {
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+  if (poly.geometry.type === "Polygon") {
+    poly.geometry.coordinates[0].forEach(([x, y]) => {
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    });
+  }
+  else if (poly.geometry.type === "MultiPolygon") {
+    poly.geometry.coordinates.forEach(polygon => {
+      polygon[0].forEach(([x, y]) => {
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      });
+    });
+  }
+
+  return [minX, minY, maxX, maxY];
+}

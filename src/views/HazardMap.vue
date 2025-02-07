@@ -2,18 +2,21 @@
 import { shallowRef, onMounted, nextTick } from 'vue';
 import "leaflet/dist/leaflet.css";
 import * as L from 'leaflet';
-import { getAllStatePolys, getAveragePrecipitationForState } from "@/components/geolocation/geomath";
+import {
+  getAllStatePolys,
+  getStateHazardExtrems
+} from "@/components/geolocation/geomath";
 
 // Optimize reactivity by using shallowRef
 const initialMap = shallowRef(null); // Only track root, not deep reactivity
 const polygons = shallowRef([]); // Store immutable GeoJSON data
 
 const selectedState = shallowRef('');
-const averagePrecipitationForState = shallowRef('');
+const stateHazardExtrems = shallowRef('');
 
 const selectState = async (state) => {
   selectedState.value = state;
-  averagePrecipitationForState.value = await getAveragePrecipitationForState(state);
+  stateHazardExtrems.value = await getStateHazardExtrems(state);
 };
 
 onMounted(async () => {
@@ -38,13 +41,12 @@ onMounted(async () => {
 
   L.geoJSON(polygons.value, {
     style: {
-      color: "#401c8c",  // Border color
+      color: "#8d1442",  // Border color
       weight: 2,
       opacity: 0.65
     },
     onEachFeature: (feature, layer) => {
       layer.bindPopup(`<b>${feature.properties.name}</b>`); // Show state name on click
-      // Call the selectState function asynchronously outside of the leaflet callback
       layer.on('click', () => selectState(feature.properties.name));
     }
   }).addTo(initialMap.value);
@@ -53,9 +55,10 @@ onMounted(async () => {
 
 <template>
   <div>
-    <h1>Average Precipitation last 30 days</h1>
+    <h1>Hazard Map</h1>
     <div id="map"></div>
-    <p v-if="averagePrecipitationForState">Average Precipitation: {{ averagePrecipitationForState }}mm/h</p>
+    <p v-if="selectedState">{{selectedState}} hazards</p>
+    <p v-if="stateHazardExtrems">Average Precipitation: {{ stateHazardExtrems }}mm/h</p>
   </div>
 </template>
 

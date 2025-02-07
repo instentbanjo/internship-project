@@ -3,6 +3,7 @@ import HomeView from "../views/HomeView.vue";
 import Coordinates from "@/views/Coordinates.vue";
 import WeatherAPi from "@/views/WeatherAPi.vue";
 import MapSelect from "@/views/MapSelect.vue";
+import HazardMap from "@/views/HazardMap.vue";
 
 const routes = [
   {
@@ -16,14 +17,19 @@ const routes = [
     component: WeatherAPi,
   },
   {
+    path: "/coordinates",
+    name: "coordinates",
+    component: Coordinates,
+  },
+  {
     path: "/mapSelect",
     name: "mapSelect",
     component: MapSelect,
   },
   {
-    path: "/coordinates",
-    name: "coordinates",
-    component: Coordinates,
+    path: "/hazardMap",
+    name: "hazardMap",
+    component:HazardMap,
   },
 ];
 

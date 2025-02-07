@@ -16,7 +16,6 @@ export const getAveragePrecipitationForState = async (state, numOfPoints = 10) =
     const averageOnPoint = await getAveragePrecipitationForPoint([point1[1], point1[0]]);
     averageInState += averageOnPoint;
   }
-  console.log(averageInState / numOfPoints)
   return averageInState / numOfPoints;
 }
 export const getAveragePrecipitationForPoint = async (pointCoord) => {
@@ -57,21 +56,66 @@ export const getHazardExtremsForPoint = async (pointCoord) => {
     const response = await fetch(url);
     const data = await response.json();
 
-    console.log(data.daily)
+    const average_temeperature_max = data.daily.temperature_2m_max.reduce((acc, value) => acc + value, 0) / data.daily.temperature_2m_max.length;
+    const average_temeperature_min = data.daily.temperature_2m_min.reduce((acc, value) => acc + value, 0) / data.daily.temperature_2m_min.length;
+    const average_wind_speed_max = data.daily.wind_speed_10m_max.reduce((acc, value) => acc + value, 0) / data.daily.wind_speed_10m_max.length;
+    const temperature_max = Math.max(...data.daily.temperature_2m_max);
+    const temperature_min = Math.min(...data.daily.temperature_2m_min);
+    const wind_speed_max = Math.max(...data.daily.wind_speed_10m_max);
 
+    return {
+      average_temeperature_max: average_temeperature_max,
+      average_temeperature_min: average_temeperature_min,
+      average_wind_speed_max: average_wind_speed_max,
+      temperature_max: temperature_max,
+      temperature_min: temperature_min,
+      wind_speed_max: wind_speed_max
+    }
   } catch (error) {
     console.error("Error fetching weather data:", error);
     return null;
   }
 
 }
-export const getStateHazardExtrems = async (state) => {
+export const getHazardExtremesForState = async (state) => {
+  let finalAverage = []
+  let average_temeperature_max = []
+  let average_temeperature_min = []
+  let average_wind_speed_max = []
+  let temperature_max = []
+  let temperature_min = []
+  let wind_speed_max = []
+
   let points = getConsistentPointsInState(state);
-  points.forEach(async (point) => {
+  for (const point of points) {
+    const index = points.indexOf(point);
     const hazard = await getHazardExtremsForPoint(point);
-    console.log(hazard)
-  });
-  return points
+    if (index === 4){
+      average_temeperature_max.push(hazard.average_temeperature_max)
+      average_temeperature_min.push(hazard.average_temeperature_min)
+      average_wind_speed_max.push(hazard.average_wind_speed_max)
+      temperature_max.push(hazard.temperature_max)
+      temperature_min.push(hazard.temperature_min)
+      wind_speed_max.push(hazard.wind_speed_max)
+
+    }
+    average_temeperature_max.push(hazard.average_temeperature_max)
+    average_temeperature_min.push(hazard.average_temeperature_min)
+    average_wind_speed_max.push(hazard.average_wind_speed_max)
+    temperature_max.push(hazard.temperature_max)
+    temperature_min.push(hazard.temperature_min)
+    wind_speed_max.push(hazard.wind_speed_max)
+
+  }
+  finalAverage.average_temeperature_max = average_temeperature_max.reduce((acc, value) => acc + value, 0) / average_temeperature_max.length;
+  finalAverage.average_temeperature_min = average_temeperature_min.reduce((acc, value) => acc + value, 0) / average_temeperature_min.length;
+  finalAverage.average_wind_speed_max = average_wind_speed_max.reduce((acc, value) => acc + value, 0) / average_wind_speed_max.length;
+  finalAverage.temperature_max = temperature_max.reduce((acc, value) => acc + value, 0) / temperature_max.length;
+  finalAverage.temperature_min = temperature_min.reduce((acc, value) => acc + value, 0) / temperature_min.length;
+  finalAverage.wind_speed_max = wind_speed_max.reduce((acc, value) => acc + value, 0) / wind_speed_max.length;
+  finalAverage.timeCode = new Date().toISOString().split('T')[0];
+  finalAverage.state = state;
+  return finalAverage;
 }
 export const getStatePolygon = (state) => {
   let currentState = statesData.features.filter((s) => s.properties.name === state)[0];
@@ -140,7 +184,6 @@ export const getSamplePointsInState = (count, state) => {
       points.push([lon, lat]);
     }
   }
-  console.log(points)
   return points;
 
 };
@@ -158,6 +201,10 @@ function calculateBBox(poly) {
   else if (poly.geometry.type === "MultiPolygon") {
     poly.geometry.coordinates.forEach(polygon => {
       polygon[0].forEach(([x, y]) => {
+        //API only accepts until -180
+        if (x < -180){
+          x = -180
+        }
         if (x < minX) minX = x;
         if (y < minY) minY = y;
         if (x > maxX) maxX = x;

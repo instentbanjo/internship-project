@@ -4,7 +4,7 @@ import "leaflet/dist/leaflet.css";
 import * as L from 'leaflet';
 import {
   getAllStatePolys,
-  getStateHazardExtrems
+  getHazardExtremesForState
 } from "@/components/geolocation/geomath";
 
 // Optimize reactivity by using shallowRef
@@ -12,11 +12,13 @@ const initialMap = shallowRef(null); // Only track root, not deep reactivity
 const polygons = shallowRef([]); // Store immutable GeoJSON data
 
 const selectedState = shallowRef('');
-const stateHazardExtrems = shallowRef('');
+const stateHazardExtremes = shallowRef();
 
 const selectState = async (state) => {
   selectedState.value = state;
-  stateHazardExtrems.value = await getStateHazardExtrems(state);
+  stateHazardExtremes.value = null;
+  stateHazardExtremes.value = await getHazardExtremesForState(state);
+  console.log(stateHazardExtremes.value)
 };
 
 onMounted(async () => {
@@ -57,8 +59,32 @@ onMounted(async () => {
   <div>
     <h1>Hazard Map</h1>
     <div id="map"></div>
-    <p v-if="selectedState">{{selectedState}} hazards</p>
-    <p v-if="stateHazardExtrems">Average Precipitation: {{ stateHazardExtrems }}mm/h</p>
+    <h2 v-if="selectedState">{{selectedState}}</h2>
+    <div v-if="stateHazardExtremes" class="hazard-card">
+      <h2>Hazard Data for {{ selectedState }}</h2>
+      <p class="updated-time">Last Updated: <strong>{{ stateHazardExtremes.timeCode }}</strong></p>
+
+      <div class="hazard-grid">
+        <div class="hazard-item">
+          <span>Avg Temp Max:</span> <strong>{{ stateHazardExtremes.average_temeperature_max }}°C</strong>
+        </div>
+        <div class="hazard-item">
+          <span>Avg Temp Min:</span> <strong>{{ stateHazardExtremes.average_temeperature_min }}°C</strong>
+        </div>
+        <div class="hazard-item">
+          <span>Avg Wind Speed Max:</span> <strong>{{ stateHazardExtremes.average_wind_speed_max }} m/s</strong>
+        </div>
+        <div class="hazard-item">
+          <span>Max Temp:</span> <strong>{{ stateHazardExtremes.temperature_max }}°C</strong>
+        </div>
+        <div class="hazard-item">
+          <span>Min Temp:</span> <strong>{{ stateHazardExtremes.temperature_min }}°C</strong>
+        </div>
+        <div class="hazard-item">
+          <span>Max Wind Speed:</span> <strong>{{ stateHazardExtremes.wind_speed_max }} m/s</strong>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -70,4 +96,43 @@ onMounted(async () => {
   display: flex;
   margin: 30px auto;
 }
+.hazard-card {
+  background: #f9f9f9;
+  border-radius: 10px;
+  padding: 20px;
+  width: 60%;
+  margin: 20px auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.updated-time {
+  color: #555;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.hazard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.hazard-item {
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 7px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  font-size: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hazard-item span {
+  font-weight: 600;
+  color: #444;
+}
+
 </style>

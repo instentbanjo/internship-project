@@ -18,6 +18,7 @@ const selectState = async (state) => {
   selectedState.value = state;
   stateHazardExtremes.value = null;
   stateHazardExtremes.value = await getHazardExtremesForState(state);
+  console.log(stateHazardExtremes.value);
 };
 
 onMounted(async () => {
@@ -61,26 +62,27 @@ onMounted(async () => {
     <h2 v-if="selectedState">{{selectedState}}</h2>
     <div v-if="stateHazardExtremes" class="hazard-card">
       <h2>Hazard Data for {{ selectedState }}</h2>
-      <p class="updated-time">Last Updated: <strong>{{ stateHazardExtremes.timeCode }}</strong></p>
+
+      <h3>Rainfall Probability last 30 days: {{stateHazardExtremes.precipitation_percentage_max}}%</h3>
 
       <div class="hazard-grid">
         <div class="hazard-item">
-          <span>Avg Temp Max:</span> <strong>{{ stateHazardExtremes.average_temperature_max }}°C</strong>
+          <span><i class="fa fa-temperature-arrow-up" /> Avg. Max Temp/Day:</span> <strong>{{ stateHazardExtremes.average_temperature_max }}°F</strong>
         </div>
         <div class="hazard-item">
-          <span>Avg Temp Min:</span> <strong>{{ stateHazardExtremes.average_temperature_min }}°C</strong>
+          <span><i class="fa fa-temperature-arrow-up" /> Max Temp Last Year:</span> <strong>{{ stateHazardExtremes.temperature_max }}°F</strong>
         </div>
         <div class="hazard-item">
-          <span>Avg Wind Speed Max:</span> <strong>{{ stateHazardExtremes.average_wind_speed_max }} km/h</strong>
+          <span><i class="fa fa-temperature-arrow-down" /> Avg. Min Temp/Day:</span> <strong>{{ stateHazardExtremes.average_temperature_min }}°F</strong>
         </div>
         <div class="hazard-item">
-          <span>Max Temp:</span> <strong>{{ stateHazardExtremes.temperature_max }}°C</strong>
+          <span><i class="fa fa-temperature-arrow-down" /> Min Temp Last Year:</span> <strong>{{ stateHazardExtremes.temperature_min }}°F</strong>
         </div>
         <div class="hazard-item">
-          <span>Min Temp:</span> <strong>{{ stateHazardExtremes.temperature_min }}°C</strong>
+          <span><i class="fa fa-wind" /> Avg. Max Wind Speed/Day:</span> <strong>{{ stateHazardExtremes.average_wind_speed_max }} mph</strong>
         </div>
         <div class="hazard-item">
-          <span>Max Wind Speed:</span> <strong>{{ stateHazardExtremes.wind_speed_max }} km/h</strong>
+          <span><i class="fa fa-wind" /> Max Wind Speed Last Year:</span> <strong>{{ stateHazardExtremes.wind_speed_max }} mph</strong>
         </div>
       </div>
     </div>

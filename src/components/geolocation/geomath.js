@@ -45,16 +45,22 @@ export const getAveragePrecipitationForPoint = async (pointCoord) => {
 };
 export const getHazardExtremsForPoint = async (pointCoord) => {
   const currentDate = new Date();
+  const pastYear = new Date(currentDate);
   const pastMonth = new Date(currentDate);
-  pastMonth.setMonth(currentDate.getMonth() - 12);
+  pastYear .setMonth(currentDate.getMonth() - 12);
+  pastMonth.setMonth(currentDate.getMonth() - 1);
 
-  const startDate = pastMonth.toISOString().split('T')[0];
+  const startDateY = pastMonth.toISOString().split('T')[0];
+  const startDateM = pastMonth.toISOString().split('T')[0];
   const endDate = currentDate.toISOString().split('T')[0];
 
-  const url = `https://historical-forecast-api.open-meteo.com/v1/forecast?latitude=${pointCoord[1]}&longitude=${pointCoord[0]}&start_date=${startDate}&end_date=${endDate}&daily=temperature_2m_max,temperature_2m_min,wind_speed_10m_max&precipitation_unit=inch`;
+  const url = `https://historical-forecast-api.open-meteo.com/v1/forecast?latitude=${pointCoord[1]}&longitude=${pointCoord[0]}&start_date=${startDateY}&end_date=${endDate}&daily=temperature_2m_max,temperature_2m_min,wind_speed_10m_max&temperature_unit=fahrenheit&wind_speed_unit=mph`;
+  const urlRain = `https://historical-forecast-api.open-meteo.com/v1/forecast?latitude=${pointCoord[1]}&longitude=${pointCoord[0]}&start_date=${startDateM}&end_date=${endDate}&daily=precipitation_probability_max`;
   try {
     const response = await fetch(url);
+    const responseRain = await fetch(urlRain);
     const data = await response.json();
+    const dataRain = await responseRain.json();
 
     const average_temperature_max = data.daily.temperature_2m_max.reduce((acc, value) => acc + value, 0) / data.daily.temperature_2m_max.length;
     const average_temperature_min = data.daily.temperature_2m_min.reduce((acc, value) => acc + value, 0) / data.daily.temperature_2m_min.length;
@@ -62,6 +68,9 @@ export const getHazardExtremsForPoint = async (pointCoord) => {
     const temperature_max = Math.max(...data.daily.temperature_2m_max);
     const temperature_min = Math.min(...data.daily.temperature_2m_min);
     const wind_speed_max = Math.max(...data.daily.wind_speed_10m_max);
+    const precipitation_percentage_max = dataRain.daily.precipitation_probability_max.reduce((acc, value) => acc + value, 0) / dataRain.daily.precipitation_probability_max.length;
+
+    console.log("precipitation_percentage_max", precipitation_percentage_max)
 
     return {
       average_temperature_max: average_temperature_max,
@@ -69,7 +78,8 @@ export const getHazardExtremsForPoint = async (pointCoord) => {
       average_wind_speed_max: average_wind_speed_max,
       temperature_max: temperature_max,
       temperature_min: temperature_min,
-      wind_speed_max: wind_speed_max
+      wind_speed_max: wind_speed_max,
+      precipitation_percentage_max: precipitation_percentage_max
     }
   } catch (error) {
     console.error("Error fetching weather data:", error);
@@ -95,6 +105,7 @@ export const getHazardExtremesForState = async (state) => {
     temperature_max: calculateAverage("temperature_max"),
     temperature_min: calculateAverage("temperature_min"),
     wind_speed_max: calculateAverage("wind_speed_max"),
+    precipitation_percentage_max: calculateAverage("precipitation_percentage_max"),
     timeCode: new Date().toISOString().split('T')[0],
     state
   };

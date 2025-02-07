@@ -18,7 +18,6 @@ const selectState = async (state) => {
   selectedState.value = state;
   stateHazardExtremes.value = null;
   stateHazardExtremes.value = await getHazardExtremesForState(state);
-  console.log(stateHazardExtremes.value)
 };
 
 onMounted(async () => {
@@ -66,13 +65,13 @@ onMounted(async () => {
 
       <div class="hazard-grid">
         <div class="hazard-item">
-          <span>Avg Temp Max:</span> <strong>{{ stateHazardExtremes.average_temeperature_max }}°C</strong>
+          <span>Avg Temp Max:</span> <strong>{{ stateHazardExtremes.average_temperature_max }}°C</strong>
         </div>
         <div class="hazard-item">
-          <span>Avg Temp Min:</span> <strong>{{ stateHazardExtremes.average_temeperature_min }}°C</strong>
+          <span>Avg Temp Min:</span> <strong>{{ stateHazardExtremes.average_temperature_min }}°C</strong>
         </div>
         <div class="hazard-item">
-          <span>Avg Wind Speed Max:</span> <strong>{{ stateHazardExtremes.average_wind_speed_max }} m/s</strong>
+          <span>Avg Wind Speed Max:</span> <strong>{{ stateHazardExtremes.average_wind_speed_max }} km/h</strong>
         </div>
         <div class="hazard-item">
           <span>Max Temp:</span> <strong>{{ stateHazardExtremes.temperature_max }}°C</strong>
@@ -81,7 +80,7 @@ onMounted(async () => {
           <span>Min Temp:</span> <strong>{{ stateHazardExtremes.temperature_min }}°C</strong>
         </div>
         <div class="hazard-item">
-          <span>Max Wind Speed:</span> <strong>{{ stateHazardExtremes.wind_speed_max }} m/s</strong>
+          <span>Max Wind Speed:</span> <strong>{{ stateHazardExtremes.wind_speed_max }} km/h</strong>
         </div>
       </div>
     </div>

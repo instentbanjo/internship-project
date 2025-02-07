@@ -56,16 +56,16 @@ export const getHazardExtremsForPoint = async (pointCoord) => {
     const response = await fetch(url);
     const data = await response.json();
 
-    const average_temeperature_max = data.daily.temperature_2m_max.reduce((acc, value) => acc + value, 0) / data.daily.temperature_2m_max.length;
-    const average_temeperature_min = data.daily.temperature_2m_min.reduce((acc, value) => acc + value, 0) / data.daily.temperature_2m_min.length;
+    const average_temperature_max = data.daily.temperature_2m_max.reduce((acc, value) => acc + value, 0) / data.daily.temperature_2m_max.length;
+    const average_temperature_min = data.daily.temperature_2m_min.reduce((acc, value) => acc + value, 0) / data.daily.temperature_2m_min.length;
     const average_wind_speed_max = data.daily.wind_speed_10m_max.reduce((acc, value) => acc + value, 0) / data.daily.wind_speed_10m_max.length;
     const temperature_max = Math.max(...data.daily.temperature_2m_max);
     const temperature_min = Math.min(...data.daily.temperature_2m_min);
     const wind_speed_max = Math.max(...data.daily.wind_speed_10m_max);
 
     return {
-      average_temeperature_max: average_temeperature_max,
-      average_temeperature_min: average_temeperature_min,
+      average_temperature_max: average_temperature_max,
+      average_temperature_min: average_temperature_min,
       average_wind_speed_max: average_wind_speed_max,
       temperature_max: temperature_max,
       temperature_min: temperature_min,
@@ -77,46 +77,29 @@ export const getHazardExtremsForPoint = async (pointCoord) => {
   }
 
 }
+
 export const getHazardExtremesForState = async (state) => {
-  let finalAverage = []
-  let average_temeperature_max = []
-  let average_temeperature_min = []
-  let average_wind_speed_max = []
-  let temperature_max = []
-  let temperature_min = []
-  let wind_speed_max = []
-
   let points = getConsistentPointsInState(state);
-  for (const point of points) {
-    const index = points.indexOf(point);
-    const hazard = await getHazardExtremsForPoint(point);
-    if (index === 4){
-      average_temeperature_max.push(hazard.average_temeperature_max)
-      average_temeperature_min.push(hazard.average_temeperature_min)
-      average_wind_speed_max.push(hazard.average_wind_speed_max)
-      temperature_max.push(hazard.temperature_max)
-      temperature_min.push(hazard.temperature_min)
-      wind_speed_max.push(hazard.wind_speed_max)
+  let hazards = await Promise.all(points.map(getHazardExtremsForPoint));
 
-    }
-    average_temeperature_max.push(hazard.average_temeperature_max)
-    average_temeperature_min.push(hazard.average_temeperature_min)
-    average_wind_speed_max.push(hazard.average_wind_speed_max)
-    temperature_max.push(hazard.temperature_max)
-    temperature_min.push(hazard.temperature_min)
-    wind_speed_max.push(hazard.wind_speed_max)
+  // Weight the center point (index 4) double
+  if (hazards[4]) hazards.push(hazards[4]);
 
-  }
-  finalAverage.average_temeperature_max = average_temeperature_max.reduce((acc, value) => acc + value, 0) / average_temeperature_max.length;
-  finalAverage.average_temeperature_min = average_temeperature_min.reduce((acc, value) => acc + value, 0) / average_temeperature_min.length;
-  finalAverage.average_wind_speed_max = average_wind_speed_max.reduce((acc, value) => acc + value, 0) / average_wind_speed_max.length;
-  finalAverage.temperature_max = temperature_max.reduce((acc, value) => acc + value, 0) / temperature_max.length;
-  finalAverage.temperature_min = temperature_min.reduce((acc, value) => acc + value, 0) / temperature_min.length;
-  finalAverage.wind_speed_max = wind_speed_max.reduce((acc, value) => acc + value, 0) / wind_speed_max.length;
-  finalAverage.timeCode = new Date().toISOString().split('T')[0];
-  finalAverage.state = state;
-  return finalAverage;
-}
+  const calculateAverage = (key) =>
+    Math.round(hazards.reduce((acc, hazard) => acc + hazard[key], 0) / hazards.length);
+
+  return {
+    average_temperature_max:  calculateAverage("average_temperature_max"),
+    average_temperature_min: calculateAverage("average_temperature_min"),
+    average_wind_speed_max: calculateAverage("average_wind_speed_max"),
+    temperature_max: calculateAverage("temperature_max"),
+    temperature_min: calculateAverage("temperature_min"),
+    wind_speed_max: calculateAverage("wind_speed_max"),
+    timeCode: new Date().toISOString().split('T')[0],
+    state
+  };
+};
+
 export const getStatePolygon = (state) => {
   let currentState = statesData.features.filter((s) => s.properties.name === state)[0];
   if (currentState.geometry.type === "Polygon") {

@@ -32,7 +32,10 @@ watch(timeSpan, () => {
 });
 
 watch(selectedTemps, () => {
-  console.log(selectedTemps)
+  drawChart();
+});
+
+watch(heatSelected, () => {
   drawChart();
 });
 
@@ -43,7 +46,8 @@ const getChartData = () => {
     .map((date, i) => ({
       date: parseTime(date),
       tempMax: currentWeatherData.daily.temperature_2m_max.slice(-timeSpan.value)[i],
-      tempMin: currentWeatherData.daily.temperature_2m_min.slice(-timeSpan.value)[i]
+      tempMin: currentWeatherData.daily.temperature_2m_min.slice(-timeSpan.value)[i],
+      windMax: currentWeatherData.daily.wind_speed_10m_max.slice(-timeSpan.value)[i],
     }));
   return data;
 };
@@ -52,7 +56,6 @@ const selectState = async (state) => {
   selectedState.value = state;
   stateHazardExtremes.value = null;
   stateHazardExtremes.value = await getHazardExtremesForState(state);
-  console.log(stateHazardExtremes.value);
 };
 
 
@@ -72,56 +75,91 @@ const drawChart = async () => {
 
   const data = getChartData();
 
-  const x = d3.scaleTime()
-    .domain(d3.extent(data, d => d.date))
-    .range([0, width - margin.left - margin.right]);
 
-  const y = d3.scaleLinear()
-    .domain([d3.min(data, d => d.tempMin) - 5, d3.max(data, d => d.tempMax) + 5])
-    .range([height - margin.top - margin.bottom, 0]);
+  if (heatSelected.value){
 
-  const xAxis = d3.axisBottom(x).ticks(6).tickFormat(d3.timeFormat("%b %d"));
-  const yAxis = d3.axisLeft(y).ticks(6);
+    const x = d3.scaleTime()
+      .domain(d3.extent(data, d => d.date))
+      .range([0, width - margin.left - margin.right]);
 
-  g.append("g")
-    .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
-    .call(xAxis);
+    const y = d3.scaleLinear()
+      .domain([d3.min(data, d => d.tempMin) - 5, d3.max(data, d => d.tempMax) + 5])
+      .range([height - margin.top - margin.bottom, 0]);
 
-  g.append("g").call(yAxis);
+    const xAxis = d3.axisBottom(x).ticks(6).tickFormat(d3.timeFormat("%b %d"));
+    const yAxis = d3.axisLeft(y).ticks(6);
 
-  const maxTemperatureLine = d3.line()
-    .x(d => x(d.date))
-    .y(d => y(d.tempMax));
+    g.append("g")
+      .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
+      .call(xAxis);
 
-  const minTemperatureLine = d3.line()
-    .x(d => x(d.date))
-    .y(d => y(d.tempMin));
+    g.append("g").call(yAxis);
 
-  // Conditionally append lines
-  if (selectedTemps.value.includes("max")) {
+    const maxTemperatureLine = d3.line()
+      .x(d => x(d.date))
+      .y(d => y(d.tempMax));
+
+    const minTemperatureLine = d3.line()
+      .x(d => x(d.date))
+      .y(d => y(d.tempMin));
+
+    // Conditionally append lines
+    if (selectedTemps.value.includes("max")) {
+      g.append("path")
+        .datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "red")
+        .attr("stroke-width", 2)
+        .attr("d", maxTemperatureLine);
+    }
+
+    if (selectedTemps.value.includes("min")) {
+      g.append("path")
+        .datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "steelblue")
+        .attr("stroke-width", 2)
+        .attr("d", minTemperatureLine);
+    }
+
+  }
+  else {
+    const x = d3.scaleTime()
+      .domain(d3.extent(data, d => d.date))
+      .range([0, width - margin.left - margin.right]);
+
+    const y = d3.scaleLinear()
+      .domain([d3.min(data, d => d.windMax) - 5, d3.max(data, d => d.windMax) + 5])
+      .range([height - margin.top - margin.bottom, 0]);
+
+    const xAxis = d3.axisBottom(x).ticks(6).tickFormat(d3.timeFormat("%b %d"));
+    const yAxis = d3.axisLeft(y).ticks(6);
+
+    g.append("g")
+      .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
+      .call(xAxis);
+
+    g.append("g").call(yAxis);
+
+    const maxWindLine = d3.line()
+      .x(d => x(d.date))
+      .y(d => y(d.windMax));
+
     g.append("path")
       .datum(data)
       .attr("fill", "none")
       .attr("stroke", "red")
       .attr("stroke-width", 2)
-      .attr("d", maxTemperatureLine);
+      .attr("d", maxWindLine);
+
   }
 
-  if (selectedTemps.value.includes("min")) {
-    g.append("path")
-      .datum(data)
-      .attr("fill", "none")
-      .attr("stroke", "steelblue")
-      .attr("stroke-width", 2)
-      .attr("d", minTemperatureLine);
-  }
 };
 
 
 const switchView = () => {
   cardSelected.value = cardSelected.value === 'details' ? 'chart' : 'details';
   if(cardSelected.value == 'chart'){
-    console.log(currentWeatherData.daily);
     drawChart()
   }
 }

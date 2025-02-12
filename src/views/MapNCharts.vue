@@ -1,5 +1,10 @@
 <script setup>
-import { shallowRef, onMounted, nextTick } from 'vue';
+import {
+  shallowRef,
+  onMounted,
+  nextTick,
+  watch
+} from 'vue';
 import "leaflet/dist/leaflet.css";
 import * as L from 'leaflet';
 import * as d3 from 'd3'
@@ -17,7 +22,19 @@ const selectedState = shallowRef('');
 const stateHazardExtremes = shallowRef();
 const cardSelected = shallowRef('details');
 
+const heatSelected = shallowRef(true);
+const selectedTemps = shallowRef(['min', 'max']);  // Array to track selected options
+
 const timeSpan = shallowRef(30);
+
+watch(timeSpan, () => {
+  drawChart();
+});
+
+watch(selectedTemps, () => {
+  console.log(selectedTemps)
+  drawChart();
+});
 
 const getChartData = () => {
   const parseTime = d3.timeParse("%Y-%m-%d");
@@ -53,8 +70,6 @@ const drawChart = async () => {
 
   const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-
-  // Convert data into an array of objects
   const data = getChartData();
 
   const x = d3.scaleTime()
@@ -76,27 +91,30 @@ const drawChart = async () => {
 
   const maxTemperatureLine = d3.line()
     .x(d => x(d.date))
-    .y(d => y(d.tempMax))
-    .curve(d3.curveMonotoneX);
+    .y(d => y(d.tempMax));
 
   const minTemperatureLine = d3.line()
     .x(d => x(d.date))
-    .y(d => y(d.tempMin))
-    .curve(d3.curveMonotoneX);
+    .y(d => y(d.tempMin));
 
-  g.append("path")
-    .datum(data)
-    .attr("fill", "none")
-    .attr("stroke", "red")
-    .attr("stroke-width", 2)
-    .attr("d", maxTemperatureLine);
+  // Conditionally append lines
+  if (selectedTemps.value.includes("max")) {
+    g.append("path")
+      .datum(data)
+      .attr("fill", "none")
+      .attr("stroke", "red")
+      .attr("stroke-width", 2)
+      .attr("d", maxTemperatureLine);
+  }
 
-  g.append("path")
-    .datum(data)
-    .attr("fill", "none")
-    .attr("stroke", "steelblue")
-    .attr("stroke-width", 2)
-    .attr("d", minTemperatureLine);
+  if (selectedTemps.value.includes("min")) {
+    g.append("path")
+      .datum(data)
+      .attr("fill", "none")
+      .attr("stroke", "steelblue")
+      .attr("stroke-width", 2)
+      .attr("d", minTemperatureLine);
+  }
 };
 
 
@@ -182,7 +200,56 @@ onMounted(async () => {
         </div>
       </div>
       <div v-else>
-        <h2>Chart</h2>
+        <div id="chart-settings" class="card">
+          <h2>Chart Settings</h2>
+
+          <div style="display: flex;">
+            <div>
+
+              <div>
+                <label for="f-option" class="l-radio">
+                  <input type="radio" id="f-option" @click="heatSelected = true" name="selector" tabindex="1" checked>
+                  <span>Temperature</span>
+                </label>
+                <label for="s-option" class="l-radio">
+                  <input type="radio" id="s-option" @click="heatSelected = false" name="selector" tabindex="2">
+                  <span>Wind</span>
+                </label>
+              </div>
+
+              <div v-if="heatSelected">
+                <label for="a-option" class="l-radio">
+                  <input type="checkbox" id="a-option" v-model="selectedTemps" value="max" tabindex="3">
+                  <span>Max</span>
+                </label>
+                <label for="b-option" class="l-radio">
+                  <input type="checkbox" id="b-option" v-model="selectedTemps" value="min" tabindex="4">
+                  <span>Min</span>
+                </label>
+              </div>
+            </div>
+            <div>
+              <label class="select" for="slct">
+                <select id="slct" v-model="timeSpan" required="required">
+                  <option :value="30">Last Month</option>
+                  <option :value="90">Last Three Months</option>
+                  <option :value="180">Last Six Months</option>
+                  <option :value="360">Last Year</option>
+                </select>
+                <svg>
+                  <use xlink:href="#select-arrow-down"></use>
+                </svg>
+              </label>
+              <!-- SVG Sprites-->
+              <svg class="sprites">
+                <symbol id="select-arrow-down" viewbox="0 0 10 6">
+                  <polyline points="1 1 5 5 9 1"></polyline>
+                </symbol>
+              </svg>
+            </div>
+          </div>
+
+        </div>
         <svg id="chart"></svg>
         </div>
       </div>
@@ -191,6 +258,17 @@ onMounted(async () => {
 
 
 <style scoped>
+
+#chart-settings{
+  display: flex;
+  justify-content: space-between;
+  padding: 15px;
+  align-items: center;
+  text-align: center;
+  flex-direction: column;
+  flex-wrap: wrap;
+}
+
 #map{
   border-radius: 7px;
   height: 400px;
@@ -259,6 +337,104 @@ onMounted(async () => {
 .switch-btn:active {
   background: #6f0f30;
   transform: scale(0.98);
+}
+
+
+
+.l-radio {
+  padding: 6px;
+  border-radius: 50px;
+  display: inline-flex;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  margin: 8px 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.l-radio:hover, .l-radio:focus-within {
+  background: rgba(159, 159, 159, 0.1);
+}
+.l-radio input {
+  vertical-align: middle;
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  background: none;
+  border: 0;
+  box-shadow: inset 0 0 0 1px #9F9F9F;
+  box-shadow: inset 0 0 0 1.5px #9F9F9F;
+  appearance: none;
+  padding: 0;
+  margin: 0;
+  transition: box-shadow 150ms cubic-bezier(0.95, 0.15, 0.5, 1.25);
+  pointer-events: none;
+}
+.l-radio input:focus {
+  outline: none;
+}
+.l-radio input:checked {
+  box-shadow: inset 0 0 0 6px #6743ee;
+}
+.l-radio span {
+  vertical-align: middle;
+  display: inline-block;
+  line-height: 20px;
+  padding: 0 8px;
+}
+
+.select {
+  position: relative;
+  min-width: 200px;
+}
+.select svg {
+  position: absolute;
+  right: 12px;
+  top: calc(50% - 3px);
+  width: 10px;
+  height: 6px;
+  stroke-width: 2px;
+  stroke: #9098a9;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.select select {
+  -webkit-appearance: none;
+  padding: 7px 40px 7px 12px;
+  margin: 10px 0px;
+  width: 100%;
+  border: 1px solid #e8eaed;
+  border-radius: 5px;
+  background: #fff;
+  box-shadow: 0 1px 3px -2px #9098a9;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 16px;
+  transition: all 150ms ease;
+}
+.select select:required:invalid {
+  color: #5a667f;
+}
+.select select option {
+  color: #223254;
+}
+.select select option[value=""][disabled] {
+  display: none;
+}
+.select select:focus {
+  outline: none;
+  border-color: #6743ee;
+  box-shadow: 0 0 0 2px rgba(0,119,255,0.2);
+}
+.select select:hover + svg {
+  stroke: #6743ee;
+}
+.sprites {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  user-select: none;
 }
 
 

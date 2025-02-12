@@ -60,7 +60,7 @@ onMounted(async () => {
     <h1>Hazard Map</h1>
     <div id="map"></div>
     <h2 v-if="selectedState">{{selectedState}}</h2>
-    <div v-if="stateHazardExtremes" class="hazard-card">
+    <div v-if="stateHazardExtremes" class="card">
       <h2>Hazard Data for {{ selectedState }}</h2>
 
       <h3>Rainfall Probability last 30 days: {{stateHazardExtremes.precipitation_percentage_max}}%</h3>
@@ -97,7 +97,7 @@ onMounted(async () => {
   display: flex;
   margin: 30px auto;
 }
-.hazard-card {
+.card {
   background: #f9f9f9;
   border-radius: 10px;
   padding: 20px;

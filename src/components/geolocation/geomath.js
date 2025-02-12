@@ -1,6 +1,7 @@
 import statesData from "../../data/geojson/us-states.json"; // Adjust the path to the geojson file
 import { bbox, booleanPointInPolygon, center, multiPolygon, point, polygon, randomPoint } from "@turf/turf";
 
+export let currentWeatherData;
 export const getAllStates = () => {
   const states = [];
   for (const feature of statesData.features) {
@@ -50,7 +51,7 @@ export const getHazardExtremsForPoint = async (pointCoord) => {
   pastYear .setMonth(currentDate.getMonth() - 12);
   pastMonth.setMonth(currentDate.getMonth() - 1);
 
-  const startDateY = pastMonth.toISOString().split('T')[0];
+  const startDateY = pastYear.toISOString().split('T')[0];
   const startDateM = pastMonth.toISOString().split('T')[0];
   const endDate = currentDate.toISOString().split('T')[0];
 
@@ -62,6 +63,8 @@ export const getHazardExtremsForPoint = async (pointCoord) => {
     const data = await response.json();
     const dataRain = await responseRain.json();
 
+    currentWeatherData = data;
+
     const average_temperature_max = data.daily.temperature_2m_max.reduce((acc, value) => acc + value, 0) / data.daily.temperature_2m_max.length;
     const average_temperature_min = data.daily.temperature_2m_min.reduce((acc, value) => acc + value, 0) / data.daily.temperature_2m_min.length;
     const average_wind_speed_max = data.daily.wind_speed_10m_max.reduce((acc, value) => acc + value, 0) / data.daily.wind_speed_10m_max.length;
@@ -70,7 +73,6 @@ export const getHazardExtremsForPoint = async (pointCoord) => {
     const wind_speed_max = Math.max(...data.daily.wind_speed_10m_max);
     const precipitation_percentage_max = dataRain.daily.precipitation_probability_max.reduce((acc, value) => acc + value, 0) / dataRain.daily.precipitation_probability_max.length;
 
-    console.log("precipitation_percentage_max", precipitation_percentage_max)
 
     return {
       average_temperature_max: average_temperature_max,

@@ -4,6 +4,7 @@ import Coordinates from "@/views/Coordinates.vue";
 import WeatherAPi from "@/views/WeatherAPi.vue";
 import MapSelect from "@/views/MapSelect.vue";
 import HazardMap from "@/views/HazardMap.vue";
+import MapNCharts from "@/views/MapNCharts.vue";
 
 const routes = [
   {
@@ -30,6 +31,11 @@ const routes = [
     path: "/hazardMap",
     name: "hazardMap",
     component:HazardMap,
+  },
+  {
+    path: "/mapCharts",
+    name: "mapCharts",
+    component:MapNCharts,
   },
 ];
 

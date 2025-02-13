@@ -75,41 +75,47 @@ const drawChart = async () => {
     .html(""); // Clear previous chart
 
   const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-
   const data = getChartData();
 
+  // Scale setup
+  const x = d3.scaleTime()
+    .domain(d3.extent(data, d => d.date))
+    .range([0, width - margin.left - margin.right]);
 
-  if (heatSelected.value){
+  const y = d3.scaleLinear()
+    .domain([
+      d3.min(data, d => heatSelected.value ? d.tempMin : d.windMax) - 5,
+      d3.max(data, d => heatSelected.value ? d.tempMax : d.windMax) + 5
+    ])
+    .range([height - margin.top - margin.bottom, 0]);
 
-    const x = d3.scaleTime()
-      .domain(d3.extent(data, d => d.date))
-      .range([0, width - margin.left - margin.right]);
+  const xAxis = d3.axisBottom(x).ticks(12).tickFormat(d3.timeFormat("%b %d"));
+  const yAxis = d3.axisLeft(y).ticks(6);
 
-    const y = d3.scaleLinear()
-      .domain([d3.min(data, d => d.tempMin) - 5, d3.max(data, d => d.tempMax) + 5])
-      .range([height - margin.top - margin.bottom, 0]);
+  g.append("g")
+    .attr("transform", `translate(0,${height - margin.bottom})`)
+    .call(xAxis)
+    .selectAll("text")
+    .attr("transform", "rotate(-45)")
+    .attr("text-anchor", "end");
 
-    const xAxis = d3.axisBottom(x).ticks(12).tickFormat(d3.timeFormat("%b %d"));
-    const yAxis = d3.axisLeft(y).ticks(6);
+  g.append("g").call(yAxis);
 
-    g.append("g")
-      .attr("transform", `translate(0,${height - margin.bottom})`)
-      .call(xAxis)
-      .selectAll("text")  // Rotate text for better readability
-      .attr("transform", "rotate(-45)")
-      .attr("text-anchor", "end");
+  // Line Generators
+  const maxTemperatureLine = d3.line()
+    .x(d => x(d.date))
+    .y(d => y(d.tempMax));
 
-    g.append("g").call(yAxis);
+  const minTemperatureLine = d3.line()
+    .x(d => x(d.date))
+    .y(d => y(d.tempMin));
 
-    const maxTemperatureLine = d3.line()
-      .x(d => x(d.date))
-      .y(d => y(d.tempMax));
+  const maxWindLine = d3.line()
+    .x(d => x(d.date))
+    .y(d => y(d.windMax));
 
-    const minTemperatureLine = d3.line()
-      .x(d => x(d.date))
-      .y(d => y(d.tempMin));
-
-    // Conditionally append lines
+  // Draw Lines
+  if (heatSelected.value) {
     if (selectedTemps.value.includes("max")) {
       g.append("path")
         .datum(data)
@@ -118,7 +124,6 @@ const drawChart = async () => {
         .attr("stroke-width", 2)
         .attr("d", maxTemperatureLine);
     }
-
     if (selectedTemps.value.includes("min")) {
       g.append("path")
         .datum(data)
@@ -127,39 +132,99 @@ const drawChart = async () => {
         .attr("stroke-width", 2)
         .attr("d", minTemperatureLine);
     }
-
-  }
-  else {
-    const x = d3.scaleTime()
-      .domain(d3.extent(data, d => d.date))
-      .range([0, width - margin.left - margin.right]);
-
-    const y = d3.scaleLinear()
-      .domain([d3.min(data, d => d.windMax) - 5, d3.max(data, d => d.windMax) + 5])
-      .range([height - margin.top - margin.bottom, 0]);
-
-    const xAxis = d3.axisBottom(x).ticks(6).tickFormat(d3.timeFormat("%b %d"));
-    const yAxis = d3.axisLeft(y).ticks(6);
-
-    g.append("g")
-      .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
-      .call(xAxis);
-
-    g.append("g").call(yAxis);
-
-    const maxWindLine = d3.line()
-      .x(d => x(d.date))
-      .y(d => y(d.windMax));
-
+  } else {
     g.append("path")
       .datum(data)
       .attr("fill", "none")
-      .attr("stroke", "red")
+      .attr("stroke", "lime")
       .attr("stroke-width", 2)
       .attr("d", maxWindLine);
-
   }
 
+  // Tooltip
+  const tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0)
+    .style("position", "absolute")
+    .style("background", "#fff")
+    .style("border", "1px solid #ccc")
+    .style("border-radius", "5px")
+    .style("padding", "5px")
+    .style("pointer-events", "none");
+
+  const bisectDate = d3.bisector(d => d.date).left;
+
+  // Mouseover Effect
+  const mouseMove = function (event) {
+    const [mouseX] = d3.pointer(event, this);
+    const adjustedMouseX = mouseX - margin.left; // Adjust for margins
+    const x0 = x.invert(adjustedMouseX);
+    const i = bisectDate(data, x0, 1);
+    const d0 = data[i - 1];
+    const d1 = data[i];
+    if (!d0 || !d1) return;
+    const d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+
+    // Remove previous circles before adding new ones
+    g.selectAll(".hover-circle").remove();
+
+    if (heatSelected.value) {
+      if (selectedTemps.value.includes("max")){
+        g.append("circle")
+          .attr("class", "hover-circle")
+          .attr("cx", x(d.date))
+          .attr("cy", y(d.tempMax))
+          .attr("r", 6)
+          .attr("fill", "red"); // Max temp color
+      }
+      if (selectedTemps.value.includes("min")){
+        g.append("circle")
+          .attr("class", "hover-circle")
+          .attr("cx", x(d.date))
+          .attr("cy", y(d.tempMin))
+          .attr("r", 6)
+          .attr("fill", "blue"); // Min temp color
+      }
+
+    } else {
+      // Show only wind speed circle
+      g.append("circle")
+        .attr("class", "hover-circle")
+        .attr("cx", x(d.date))
+        .attr("cy", y(d.windMax))
+        .attr("r", 6)
+        .attr("fill", "lime");
+    }
+
+    tooltip.transition().duration(100).style("opacity", 0.9);
+    tooltip
+      .html(`<strong>${d3.timeFormat("%b %d")(d.date)}</strong><br>
+      ${selectedTemps.value.includes("max")
+        ? `Max Temp: ${d.tempMax}°F <br>`
+        : ""}
+      ${selectedTemps.value.includes("min")
+        ? `Min Temp: ${d.tempMin}°F <br>`
+        : ""}
+      ${!selectedTemps.value.includes("max") && !selectedTemps.value.includes("min")
+        ? `Wind Speed: ${d.windMax} mph`
+        : ""}`)
+      .style("left", `${event.pageX + 10}px`)
+      .style("top", `${event.pageY - 30}px`);
+  };
+
+  // Remove tooltip and circles on mouse out
+  const mouseOut = function () {
+    g.selectAll(".hover-circle").remove();
+    tooltip.transition().duration(300).style("opacity", 0);
+  };
+
+  // Add event listener for mouse interactions
+  svg.append("rect")
+    .attr("width", width)
+    .attr("height", height)
+    .attr("fill", "transparent")
+    .on("mousemove", mouseMove)
+    .on("mouseout", mouseOut);
 };
 
 

@@ -56,6 +56,9 @@ const selectState = async (state) => {
   selectedState.value = state;
   stateHazardExtremes.value = null;
   stateHazardExtremes.value = await getHazardExtremesForState(state);
+  if (cardSelected.value == 'chart') {
+    drawChart();
+  }
 };
 
 
@@ -64,7 +67,7 @@ const drawChart = async () => {
 
   const width = 800;
   const height = 500;
-  const margin = { top: 20, right: 30, bottom: 40, left: 50 };
+  const margin = { top: 20, right: 30, bottom: 70, left: 50 };
 
   const svg = d3.select("#chart")
     .attr("width", width)
@@ -86,12 +89,15 @@ const drawChart = async () => {
       .domain([d3.min(data, d => d.tempMin) - 5, d3.max(data, d => d.tempMax) + 5])
       .range([height - margin.top - margin.bottom, 0]);
 
-    const xAxis = d3.axisBottom(x).ticks(6).tickFormat(d3.timeFormat("%b %d"));
+    const xAxis = d3.axisBottom(x).ticks(12).tickFormat(d3.timeFormat("%b %d"));
     const yAxis = d3.axisLeft(y).ticks(6);
 
     g.append("g")
-      .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
-      .call(xAxis);
+      .attr("transform", `translate(0,${height - margin.bottom})`)
+      .call(xAxis)
+      .selectAll("text")  // Rotate text for better readability
+      .attr("transform", "rotate(-45)")
+      .attr("text-anchor", "end");
 
     g.append("g").call(yAxis);
 
@@ -204,7 +210,7 @@ onMounted(async () => {
 
 <template>
   <div>
-    <h1>Hazard Map</h1>
+    <h1>Map N Chart</h1>
     <div id="map"></div>
     <h2 v-if="selectedState">{{ selectedState }}</h2>
     <div v-if="stateHazardExtremes">

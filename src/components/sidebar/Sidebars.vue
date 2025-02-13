@@ -28,7 +28,7 @@ export default {
     <SidebarLink to="/weatherAPI" icon="fas fa-cloud-sun-rain">Weather API</SidebarLink>
     <SidebarLink to="/mapSelect" icon="fas fa-map-location-dot">Map Select</SidebarLink>
     <SidebarLink to="/hazardMap" icon="fas fa-map">Hazard Map</SidebarLink>
-    <SidebarLink to="/mapCharts" icon="fas fa-chart-line">Hazard Map</SidebarLink>
+    <SidebarLink to="/mapCharts" icon="fas fa-chart-line">Map N Chart</SidebarLink>
 
     <span
       class="collapse-icon"

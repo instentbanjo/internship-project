@@ -101,6 +101,28 @@ const drawChart = async () => {
 
   g.append("g").call(yAxis);
 
+  // Add X-axis label
+  g.append("text")
+    .attr("class", "axis-label")
+    .attr("x", (width - margin.left - margin.right) / 2)
+    .attr("y", height - margin.bottom + 40) // Position below the x-axis
+    .style("text-anchor", "middle")
+    .style("font-size", "14px")
+    .style("fill", "#333")
+    .text("Date");
+
+// Add Y-axis label
+  g.append("text")
+    .attr("class", "axis-label")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -(height - margin.top - margin.bottom) / 2)
+    .attr("y", -margin.left + 15) // Adjust positioning
+    .style("text-anchor", "middle")
+    .style("font-size", "14px")
+    .style("fill", "#333")
+    .text(heatSelected.value ? "Temperature (°F)" : "Wind Speed (mph)");
+
+
   // Line Generators
   const maxTemperatureLine = d3.line()
     .x(d => x(d.date))

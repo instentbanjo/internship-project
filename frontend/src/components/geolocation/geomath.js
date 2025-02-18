@@ -5,7 +5,7 @@ export let currentWeatherData;
 export const getAllStates = () => {
   const states = [];
   for (const feature of statesData.features) {
-      states.push(feature.properties.name);
+    states.push(feature.properties.name);
   }
   return states
 }
@@ -110,9 +110,9 @@ export const getYearlyWeatherDataForState = async (state) => {
       averageData.temperature_2m_min[i] += data.temperature_2m_min[i];
       averageData.wind_speed_10m_max[i] += data.wind_speed_10m_max[i];
     }
-    Math.round(averageData.temperature_2m_max[i] /= points.length);
-    Math.round(averageData.temperature_2m_min[i] /= points.length);
-    Math.round(averageData.wind_speed_10m_max[i] /= points.length);
+    averageData.temperature_2m_max[i] = Math.round(averageData.temperature_2m_max[i] / points.length);
+    averageData.temperature_2m_min[i] = Math.round(averageData.temperature_2m_min[i] / points.length);
+    averageData.wind_speed_10m_max[i] = Math.round(averageData.wind_speed_10m_max[i] / points.length);
   }
   averageData.time = yearlyWeatherData[0].time;
 

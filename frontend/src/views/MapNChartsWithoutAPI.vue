@@ -59,7 +59,7 @@ const selectState = async (state) => {
   if (cardSelected.value == 'chart') {
     drawChart();
   }
-  console.log(getYearlyWeatherDataForState(state));
+  console.log(await getYearlyWeatherDataForState(state));
 };
 
 

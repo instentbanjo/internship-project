@@ -1,0 +1,160 @@
+1. Alabama:
+Latitude: 32.806671
+Longitude: -86.791130
+
+2. Alaska:
+Latitude: 61.370716
+Longitude: -149.493673
+
+3. Arizona:
+Latitude: 33.729759
+Longitude: -111.431221
+
+4. Arkansas:
+Latitude: 34.746480
+Longitude: -92.289597
+
+5. California:
+Latitude: 36.778261
+Longitude: -119.417932
+
+6. Colorado:
+Latitude: 39.550051
+Longitude: -105.782067
+
+7. Connecticut:
+Latitude: 41.603221
+Longitude: -73.087749
+
+8. Delaware:
+Latitude: 38.910832
+Longitude: -75.527670
+
+9. Florida:
+Latitude: 27.766279
+Longitude: -81.686783
+
+10. Georgia:
+Latitude: 33.040619
+Longitude: -83.643074
+
+11. Hawaii:
+Latitude: 21.094318
+Longitude: -157.498337
+12. Idaho:
+Latitude: 44.068201
+Longitude: -114.742040
+13. Illinois:
+Latitude: 40.633125
+Longitude: -89.398528
+14. Indiana:
+Latitude: 39.715300
+Longitude: -86.752180
+15. Iowa:
+Latitude: 41.974586
+Longitude: -93.448734
+16. Kansas:
+Latitude: 39.011902
+Longitude: -98.484246
+17. Kentucky:
+Latitude: 37.839333
+Longitude: -84.270018
+18. Louisiana:
+Latitude: 31.244823
+Longitude: -92.145024
+19. Maine:
+Latitude: 44.299782
+Longitude: -69.750479
+20. Maryland:
+Latitude: 39.045755
+Longitude: -76.641271
+21. Massachusetts:
+Latitude: 42.407211
+Longitude: -71.382437
+22. Michigan:
+Latitude: 44.314844
+Longitude: -85.602364
+23. Minnesota:
+Latitude: 46.729553
+Longitude: -94.685899
+24. Mississippi:
+Latitude: 32.354667
+Longitude: -89.398528
+25. Missouri:
+Latitude: 38.573936
+Longitude: -92.603760
+26. Montana:
+Latitude: 46.879682
+Longitude: -110.362566
+27. Nebraska:
+Latitude: 41.125370
+Longitude: -98.268082
+28. Nevada:
+Latitude: 38.313515
+Longitude: -117.055374
+29. New Hampshire:
+Latitude: 43.784440
+Longitude: -71.511780
+30. New Jersey:
+Latitude: 40.058323
+Longitude: -74.405661
+31. New Mexico:
+Latitude: 34.973688
+Longitude: -105.032363
+32. New York:
+Latitude: 40.712776
+Longitude: -74.005974
+33. North Carolina:
+Latitude: 35.630066
+Longitude: -79.806419
+34. North Dakota:
+Latitude: 47.528912
+Longitude: -99.784012
+35. Ohio:
+Latitude: 40.417287
+Longitude: -82.907123
+36. Oklahoma:
+Latitude: 35.467560
+Longitude: -97.516428
+37. Oregon:
+Latitude: 43.804133
+Longitude: -120.554201
+38. Pennsylvania:
+Latitude: 41.203322
+Longitude: -77.194524
+39. Rhode Island:
+Latitude: 41.580095
+Longitude: -71.511780
+40. South Carolina:
+Latitude: 33.836082
+Longitude: -81.163724
+41. South Dakota:
+Latitude: 44.299782
+Longitude: -99.438828
+42. Tennessee:
+Latitude: 35.517491
+Longitude: -86.580447
+43. Texas:
+Latitude: 31.968599
+Longitude: -99.901813
+44. Utah:
+Latitude: 40.1135
+Longitude: -111.8630
+45. Vermont:
+Latitude: 44.068201
+Longitude: -72.453842
+46. Virginia:
+Latitude: 37.431573
+Longitude: -78.656894
+47. Washington:
+Latitude: 47.751074
+Longitude: -120.740139
+48. West Virginia:
+Latitude: 38.597626
+Longitude: -80.454903
+49. Wisconsin:
+Latitude: 43.784440
+Longitude: -88.787868
+50. Wyoming:
+Latitude: 43.075970
+Longitude: -107.290283

@@ -1,15 +1,15 @@
-import statesData from "../../data/geojson/us-states.json"; // Adjust the path to the geojson file
-import { bbox, booleanPointInPolygon, center, multiPolygon, point, polygon, randomPoint } from "@turf/turf";
+const statesData = require("../data/geojson/us-states.json"); // Adjust the path to the geojson file
+const { bbox, booleanPointInPolygon, center, multiPolygon, point, polygon, randomPoint } = require("@turf/turf");
 
-export let currentWeatherData;
-export const getAllStates = () => {
+let currentWeatherData;
+const getAllStates = () => {
   const states = [];
   for (const feature of statesData.features) {
-      states.push(feature.properties.name);
+    states.push(feature.properties.name);
   }
   return states
 }
-export const getAveragePrecipitationForState = async (state, numOfPoints = 10) => {
+const getAveragePrecipitationForState = async (state, numOfPoints = 10) => {
 
   let averageInState = 0;
 
@@ -19,7 +19,7 @@ export const getAveragePrecipitationForState = async (state, numOfPoints = 10) =
   }
   return averageInState / numOfPoints;
 }
-export const getAveragePrecipitationForPoint = async (pointCoord) => {
+const getAveragePrecipitationForPoint = async (pointCoord) => {
   const currentDate = new Date();
   const pastMonth = new Date(currentDate);
   pastMonth.setMonth(currentDate.getMonth() - 1);
@@ -44,7 +44,7 @@ export const getAveragePrecipitationForPoint = async (pointCoord) => {
     return null;
   }
 };
-export const getHazardExtremsForPoint = async (pointCoord) => {
+const getHazardExtremesForPoint = async (pointCoord) => {
   const currentDate = new Date();
   const pastYear = new Date(currentDate);
   const pastMonth = new Date(currentDate);
@@ -63,7 +63,6 @@ export const getHazardExtremsForPoint = async (pointCoord) => {
     const data = await response.json();
     const dataRain = await responseRain.json();
 
-    currentWeatherData = data;
 
     const average_temperature_max = data.daily.temperature_2m_max.reduce((acc, value) => acc + value, 0) / data.daily.temperature_2m_max.length;
     const average_temperature_min = data.daily.temperature_2m_min.reduce((acc, value) => acc + value, 0) / data.daily.temperature_2m_min.length;
@@ -90,9 +89,72 @@ export const getHazardExtremsForPoint = async (pointCoord) => {
 
 }
 
-export const getHazardExtremesForState = async (state) => {
+const getYearlyWeatherDataForState = async (state) => {
+  const points = getConsistentPointsInState(state);
+  const yearlyWeatherData = await Promise.all(points.map(getYearlyWeatherDataForPoint));
+
+
+  const days = yearlyWeatherData[0].temperature_2m_max.length;
+  const averageData = {
+    temperature_2m_max: Array(days).fill(0),
+    temperature_2m_min: Array(days).fill(0),
+    wind_speed_10m_max: Array(days).fill(0),
+    time: Array(days).fill(0),
+    precipitation_probability_max: Array(days).fill(0)
+  };
+
+
+  for (let i = 0; i < days; i++) {
+    for (const data of yearlyWeatherData) {
+      averageData.temperature_2m_max[i] += data.temperature_2m_max[i];
+      averageData.temperature_2m_min[i] += data.temperature_2m_min[i];
+      averageData.wind_speed_10m_max[i] += data.wind_speed_10m_max[i];
+    }
+    averageData.temperature_2m_max[i] = Math.round(averageData.temperature_2m_max[i] / points.length);
+    averageData.temperature_2m_min[i] = Math.round(averageData.temperature_2m_min[i] / points.length);
+    averageData.wind_speed_10m_max[i] = Math.round(averageData.wind_speed_10m_max[i] / points.length);
+  }
+  averageData.time = yearlyWeatherData[0].time;
+
+  currentWeatherData = averageData;
+  return averageData;
+}
+const getYearlyWeatherDataForPoint = async (point) => {
+  const currentDate = new Date();
+  const pastYear = new Date(currentDate);
+  const pastMonth = new Date(currentDate);
+  pastYear .setMonth(currentDate.getMonth() - 12);
+  pastMonth.setMonth(currentDate.getMonth() - 1);
+
+  const startDateY = pastYear.toISOString().split('T')[0];
+  const startDateM = pastMonth.toISOString().split('T')[0];
+  const endDate = currentDate.toISOString().split('T')[0];
+
+  const url = `https://historical-forecast-api.open-meteo.com/v1/forecast?latitude=${point[1]}&longitude=${point[0]}&start_date=${startDateY}&end_date=${endDate}&daily=temperature_2m_max,temperature_2m_min,wind_speed_10m_max&temperature_unit=fahrenheit&wind_speed_unit=mph`;
+  const urlRain = `https://historical-forecast-api.open-meteo.com/v1/forecast?latitude=${point[1]}&longitude=${point[0]}&start_date=${startDateM}&end_date=${endDate}&daily=precipitation_probability_max`;
+  try {
+    const response = await fetch(url);
+    const responseRain = await fetch(urlRain);
+    const data = await response.json();
+    const dataRain = await responseRain.json();
+
+    return {
+      temperature_2m_max: data.daily.temperature_2m_max,
+      temperature_2m_min: data.daily.temperature_2m_min,
+      wind_speed_10m_max: data.daily.wind_speed_10m_max,
+      time: data.daily.time,
+      precipitation_probability_max: dataRain.daily.precipitation_probability
+    }
+  } catch (error) {
+    console.error("Error fetching weather data:", error);
+    return null;
+  }
+
+}
+
+const getHazardExtremesForState = async (state) => {
   let points = getConsistentPointsInState(state);
-  let hazards = await Promise.all(points.map(getHazardExtremsForPoint));
+  let hazards = await Promise.all(points.map(getHazardExtremesForPoint));
 
   // Weight the center point (index 4) double
   if (hazards[4]) hazards.push(hazards[4]);
@@ -113,7 +175,7 @@ export const getHazardExtremesForState = async (state) => {
   };
 };
 
-export const getStatePolygon = (state) => {
+const getStatePolygon = (state) => {
   let currentState = statesData.features.filter((s) => s.properties.name === state)[0];
   if (currentState.geometry.type === "Polygon") {
     return  polygon([currentState.geometry.coordinates[0]], { name: currentState.properties.name });
@@ -123,7 +185,7 @@ export const getStatePolygon = (state) => {
     return multiPolygon(currentState.geometry.coordinates, { name: currentState.properties.name });
   }
 }
-export const findPointState = (coord) => {
+const findPointState = (coord) => {
   for (const feature of statesData.features) {
     if (isPointInStatePoly(coord, feature)) {
       return feature.properties.name;
@@ -131,7 +193,7 @@ export const findPointState = (coord) => {
   }
   return 'State not found';
 };
-export const getAllStatePolys = () => {
+const getAllStatePolys = () => {
 
   let allPolygons = [];
   for (const feature of statesData.features) {
@@ -144,7 +206,7 @@ export const getAllStatePolys = () => {
   }
   return allPolygons;
 }
-export const isPointInStatePoly = (pointCoords, statePoly) => {
+const isPointInStatePoly = (pointCoords, statePoly) => {
   let poly;
   //when a state is in a single polygon
   if (statePoly.geometry.type === "Polygon") {
@@ -163,7 +225,7 @@ export const isPointInStatePoly = (pointCoords, statePoly) => {
   const pt = point(pointCoords);
   return booleanPointInPolygon(pt, poly);
 };
-export const getConsistentPointsInState = (state) => {
+const getConsistentPointsInState = (state) => {
   let points = [];
   let statePoly = getStatePolygon(state);
   let stateBbox = calculateBBox(getStatePolygon(state));
@@ -171,7 +233,7 @@ export const getConsistentPointsInState = (state) => {
   points.push(center(statePoly).geometry.coordinates)
   return points;
 };
-export const getSamplePointsInState = (count, state) => {
+const getSamplePointsInState = (count, state) => {
   let statePoly = getStatePolygon(state)
   let points = [];
   while (points.length < count) {
@@ -211,3 +273,19 @@ function calculateBBox(poly) {
 
   return [minX, minY, maxX, maxY];
 }
+
+module.exports = {
+  getAllStates,
+  getAveragePrecipitationForState,
+  getAveragePrecipitationForPoint,
+  getHazardExtremesForPoint,
+  getHazardExtremesForState,
+  getYearlyWeatherDataForState,
+  getYearlyWeatherDataForPoint,
+  getStatePolygon,
+  findPointState,
+  getAllStatePolys,
+  isPointInStatePoly,
+  getConsistentPointsInState,
+  getSamplePointsInState
+};

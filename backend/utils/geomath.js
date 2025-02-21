@@ -95,12 +95,13 @@ const getYearlyWeatherDataForState = async (state) => {
 
 
   const days = yearlyWeatherData[0].temperature_2m_max.length;
+  const rainfallDays = yearlyWeatherData[0].precipitation_probability_max.length;
   const averageData = {
     temperature_2m_max: Array(days).fill(0),
     temperature_2m_min: Array(days).fill(0),
     wind_speed_10m_max: Array(days).fill(0),
     time: Array(days).fill(0),
-    precipitation_probability_max: Array(days).fill(0)
+    precipitation_probability_max: Array(rainfallDays).fill(0)
   };
 
 
@@ -114,6 +115,14 @@ const getYearlyWeatherDataForState = async (state) => {
     averageData.temperature_2m_min[i] = Math.round(averageData.temperature_2m_min[i] / points.length);
     averageData.wind_speed_10m_max[i] = Math.round(averageData.wind_speed_10m_max[i] / points.length);
   }
+
+  for (let i = 0; i < rainfallDays; i++) {
+    for (const data of yearlyWeatherData) {
+      averageData.precipitation_probability_max[i] += data.precipitation_probability_max[i];
+    }
+    averageData.precipitation_probability_max[i] = Math.round(averageData.precipitation_probability_max[i] / points.length);
+  }
+
   averageData.time = yearlyWeatherData[0].time;
 
   currentWeatherData = averageData;
@@ -138,12 +147,13 @@ const getYearlyWeatherDataForPoint = async (point) => {
     const data = await response.json();
     const dataRain = await responseRain.json();
 
+
     return {
       temperature_2m_max: data.daily.temperature_2m_max,
       temperature_2m_min: data.daily.temperature_2m_min,
       wind_speed_10m_max: data.daily.wind_speed_10m_max,
       time: data.daily.time,
-      precipitation_probability_max: dataRain.daily.precipitation_probability
+      precipitation_probability_max: dataRain.daily.precipitation_probability_max
     }
   } catch (error) {
     console.error("Error fetching weather data:", error);

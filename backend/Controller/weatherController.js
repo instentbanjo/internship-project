@@ -3,14 +3,24 @@ const fs = require('fs');
 const path = require('path');
 
 const getStateAveragePrecipitation = async (req, res) => {
-  const { state, numOfPoints = 10 } = req.params;
-  if (!state || !numOfPoints) {
-    res.status(400).send(`Bad Request, params: ${state}, ${numOfPoints}`);
+  const { state } = req.body;
+  if (!state) {
+    res.status(400).send(`Bad Request, params: ${state}`);
     return;
   }
   try {
-    const averageInState = await getAveragePrecipitationForState(state, numOfPoints);
-    res.status(200).json(averageInState);
+    const filePath = path.join(__dirname, '../data/weatherData/us-states-weather-data.json');
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+
+    if (!data[state]) {
+      res.status(500).send(`State ${state} not found in data file`);
+    }
+
+    const precipitationData = data[state].precipitation_probability_max;
+    const totalPoints = Math.min(precipitationData.length);
+    const sum = precipitationData.slice(0, totalPoints).reduce((acc, val) => acc + val, 0);
+    const average = sum / totalPoints;
+    res.status(200).json(average);
   } catch (error) {
     console.error('Error fetching average precipitation for state:', error);
     res.status(500).send('Internal Server Error');
@@ -25,6 +35,7 @@ const getPointAveragePrecipitation = async (req, res) => {
   }
   try {
     const averageOnPoint = await getAveragePrecipitationForPoint([lat, lon]);
+    console.log(averageOnPoint)
     res.status(200).json(averageOnPoint);
   } catch (error) {
     console.error('Error fetching average precipitation for point:', error);
@@ -39,7 +50,7 @@ const getStateWeather = async (req, res) => {
     return;
   }
   try {
-    const data = fs.readFileSync(path.join(__dirname, 'weatherData.json'), 'utf8');
+    const data = fs.readFileSync(path.join(__dirname, '../data/weatherData/us-states-weather-data.json'), 'utf8');
     const weatherData = JSON.parse(data);
     if (weatherData[state]) {
 
@@ -71,7 +82,6 @@ const updateStateWeather = async (req, res) => {
     }
 
     weatherData[state] = averageInState;
-    console.log(weatherData)
 
     fs.writeFileSync(filePath, JSON.stringify(weatherData, null, 2), 'utf8');
 

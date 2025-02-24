@@ -9,9 +9,7 @@ import "leaflet/dist/leaflet.css";
 import * as L from 'leaflet';
 import * as d3 from 'd3'
 import {
-  currentWeatherData,
   getAllStatePolys,
-  getHazardExtremesForState, getYearlyWeatherDataForState
 } from "@/components/geolocation/geomath";
 
 // Optimize reactivity by using shallowRef
@@ -19,6 +17,7 @@ const initialMap = shallowRef(null); // Only track root, not deep reactivity
 const polygons = shallowRef([]); // Store immutable GeoJSON data
 
 const selectedState = shallowRef('');
+const selectedWeatherData = shallowRef();
 const stateHazardExtremes = shallowRef();
 const cardSelected = shallowRef('details');
 
@@ -41,25 +40,84 @@ watch(heatSelected, () => {
 
 const getChartData = () => {
   const parseTime = d3.timeParse("%Y-%m-%d");
-  const data = currentWeatherData.time
+  const data = selectedWeatherData.value.time
     .slice(-timeSpan.value) // Get only the last `timeSpan.value` entries
     .map((date, i) => ({
       date: parseTime(date),
-      tempMax: currentWeatherData.temperature_2m_max.slice(-timeSpan.value)[i],
-      tempMin: currentWeatherData.temperature_2m_min.slice(-timeSpan.value)[i],
-      windMax: currentWeatherData.wind_speed_10m_max.slice(-timeSpan.value)[i],
+      tempMax: selectedWeatherData.value.temperature_2m_max.slice(-timeSpan.value)[i],
+      tempMin: selectedWeatherData.value.temperature_2m_min.slice(-timeSpan.value)[i],
+      windMax: selectedWeatherData.value.wind_speed_10m_max.slice(-timeSpan.value)[i],
     }));
   return data;
 };
 
+const getWeatherDataForState = async (state) => {
+
+  let response = await fetch(`http://localhost:5001/weather/state?state=${encodeURIComponent(state)}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json"
+    },
+  });
+
+
+  if (!response.ok) {
+    console.error("GET request failed. Updating the database...");
+
+    // Send a POST request to update the DB
+    const postResponse = await fetch("http://localhost:5001/weather/state", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ state })
+    });
+
+    if (!postResponse.ok) {
+      console.error("POST request failed. Cannot update weather data.");
+      return null;
+    }
+
+    console.log("Database updated. Retrying GET request...");
+
+    // Retry GET request after successful update
+    response = await fetch(`http://localhost:5001/weather/state?state=${encodeURIComponent(state)}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      },
+    });
+
+    if (!response.ok) {
+      console.error("Second GET request failed. Data may still be unavailable.");
+      return null;
+    }
+  }
+
+  return await response.json();
+};
+const getWeatherExtremesForState = () => {
+  const data = selectedWeatherData.value;
+  const lastYear = data.time.length - 365;
+  const lastYearData = {
+    temperature_max: Math.round(d3.max(data.temperature_2m_max.slice(lastYear))),
+    temperature_min: Math.round(d3.min(data.temperature_2m_min.slice(lastYear))),
+    wind_speed_max: Math.round(d3.max(data.wind_speed_10m_max.slice(lastYear))),
+    average_temperature_max: Math.round(d3.mean(data.temperature_2m_max.slice(lastYear))),
+    average_temperature_min: Math.round(d3.mean(data.temperature_2m_min.slice(lastYear))),
+    average_wind_speed_max: Math.round(d3.mean(data.wind_speed_10m_max.slice(lastYear))),
+    precipitation_percentage_max: Math.round(d3.mean(data.precipitation_probability_max.slice(lastYear)))
+  };
+  return lastYearData;
+};
 const selectState = async (state) => {
   selectedState.value = state;
   stateHazardExtremes.value = null;
-  stateHazardExtremes.value = await getHazardExtremesForState(state);
+  selectedWeatherData.value = await getWeatherDataForState(state);
+  stateHazardExtremes.value = getWeatherExtremesForState(state);
   if (cardSelected.value == 'chart') {
     drawChart();
   }
-  console.log(await getYearlyWeatherDataForState(state));
 };
 
 

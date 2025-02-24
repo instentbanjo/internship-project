@@ -1,7 +1,6 @@
 import statesData from "../../data/geojson/us-states.json"; // Adjust the path to the geojson file
 import { bbox, booleanPointInPolygon, center, multiPolygon, point, polygon, randomPoint } from "@turf/turf";
 
-export let currentWeatherData;
 export const getAllStates = () => {
   const states = [];
   for (const feature of statesData.features) {
@@ -116,7 +115,6 @@ export const getYearlyWeatherDataForState = async (state) => {
   }
   averageData.time = yearlyWeatherData[0].time;
 
-  currentWeatherData = averageData;
   return averageData;
 }
 export const getYearlyWeatherDataForPoint = async (point) => {

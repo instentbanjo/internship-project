@@ -34,9 +34,9 @@ const getStateAveragePrecipitation = async (req, res) => {
 };
 
 const getStateWeather = async (req, res) => {
-  const { state } = req.body;
+  const { state } = req.query;
   if (!state) {
-    res.status(400).send(`Bad Request, params: ${state}`);
+    res.status(400).send(`Bad Request, query: ${state}`);
     return;
   }
   try {
@@ -56,7 +56,7 @@ const getStateWeather = async (req, res) => {
 const updateStateWeather = async (req, res) => {
   const { state } = req.body;
   if (!state) {
-    res.status(400).send(`Bad Request, params: ${state}`);
+    res.status(400).send(`Bad Request, body: ${JSON.stringify(req.body)}`);
     return;
   }
   try {

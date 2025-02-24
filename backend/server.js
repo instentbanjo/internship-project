@@ -1,9 +1,10 @@
 const express = require("express");
 const cookieParser = require('cookie-parser');
+const cors = require('cors');
 
 const app = express();
 app.use((req, res, next) => {
-  const cspHeader = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.example.com; style-src 'self' 'unsafe-inline' cdn.example.com; img-src 'self' data: cdn.example.com; connect-src 'self'; font-src 'self' cdn.example.com;";
+  const cspHeader = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.example.com; style-src 'self' 'unsafe-inline' cdn.example.com; img-src 'self' data: cdn.example.com; connect-src 'self' http://localhost:*; font-src 'self' cdn.example.com;";
 
   res.set({
     'Content-Security-Policy': cspHeader,
@@ -14,6 +15,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(cors());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cookieParser());

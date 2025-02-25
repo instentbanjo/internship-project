@@ -21,6 +21,8 @@ const selectedWeatherData = shallowRef();
 const stateHazardExtremes = shallowRef();
 const cardSelected = shallowRef('details');
 
+const isLoading = shallowRef(false)
+
 const heatSelected = shallowRef(true);
 const selectedTemps = shallowRef(['min', 'max']);  // Array to track selected options
 
@@ -111,6 +113,7 @@ const getWeatherExtremesForState = () => {
   return lastYearData;
 };
 const selectState = async (state) => {
+  isLoading.value = true
   selectedState.value = state;
   stateHazardExtremes.value = null;
   selectedWeatherData.value = await getWeatherDataForState(state);
@@ -118,6 +121,7 @@ const selectState = async (state) => {
   if (cardSelected.value == 'chart') {
     drawChart();
   }
+  isLoading.value = false
 };
 
 
@@ -359,90 +363,98 @@ onMounted(async () => {
     <h1>Map N Chart</h1>
     <div id="map"></div>
     <h2 v-if="selectedState">{{ selectedState }}</h2>
-    <div v-if="stateHazardExtremes">
-      <button class="switch-btn" @click="switchView">
-        Switch View
-      </button>
-      <div v-if="cardSelected !== 'chart'" class="card">
-        <h2>Hazard Data for {{ selectedState }}</h2>
+    <div v-if="isLoading" style="display:flex;flex-direction: column;align-items: center">
+      <p>Loading...</p>
+      <p>This may take a few seconds.</p>
+      <span class="loader">
+      </span>
+    </div>
+    <div v-else>
+      <div v-if="stateHazardExtremes">
+        <button class="switch-btn" @click="switchView">
+          Switch View
+        </button>
+        <div v-if="cardSelected !== 'chart'" class="card">
+          <h2>Hazard Data for {{ selectedState }}</h2>
 
-        <h3>Rainfall Probability last 30 days: {{stateHazardExtremes.precipitation_percentage_max}}%</h3>
+          <h3>Rainfall Probability last 30 days: {{stateHazardExtremes.precipitation_percentage_max}}%</h3>
 
-        <div class="hazard-grid">
-          <div class="hazard-item">
-            <span><i class="fa fa-temperature-arrow-up" /> Avg. Max Temp/Day:</span> <strong>{{ stateHazardExtremes.average_temperature_max }}°F</strong>
-          </div>
-          <div class="hazard-item">
-            <span><i class="fa fa-temperature-arrow-up" /> Max Temp Last Year:</span> <strong>{{ stateHazardExtremes.temperature_max }}°F</strong>
-          </div>
-          <div class="hazard-item">
-            <span><i class="fa fa-temperature-arrow-down" /> Avg. Min Temp/Day:</span> <strong>{{ stateHazardExtremes.average_temperature_min }}°F</strong>
-          </div>
-          <div class="hazard-item">
-            <span><i class="fa fa-temperature-arrow-down" /> Min Temp Last Year:</span> <strong>{{ stateHazardExtremes.temperature_min }}°F</strong>
-          </div>
-          <div class="hazard-item">
-            <span><i class="fa fa-wind" /> Avg. Max Wind Speed/Day:</span> <strong>{{ stateHazardExtremes.average_wind_speed_max }} mph</strong>
-          </div>
-          <div class="hazard-item">
-            <span><i class="fa fa-wind" /> Max Wind Speed Last Year:</span> <strong>{{ stateHazardExtremes.wind_speed_max }} mph</strong>
+          <div class="hazard-grid">
+            <div class="hazard-item">
+              <span><i class="fa fa-temperature-arrow-up" /> Avg. Max Temp/Day:</span> <strong>{{ stateHazardExtremes.average_temperature_max }}°F</strong>
+            </div>
+            <div class="hazard-item">
+              <span><i class="fa fa-temperature-arrow-up" /> Max Temp Last Year:</span> <strong>{{ stateHazardExtremes.temperature_max }}°F</strong>
+            </div>
+            <div class="hazard-item">
+              <span><i class="fa fa-temperature-arrow-down" /> Avg. Min Temp/Day:</span> <strong>{{ stateHazardExtremes.average_temperature_min }}°F</strong>
+            </div>
+            <div class="hazard-item">
+              <span><i class="fa fa-temperature-arrow-down" /> Min Temp Last Year:</span> <strong>{{ stateHazardExtremes.temperature_min }}°F</strong>
+            </div>
+            <div class="hazard-item">
+              <span><i class="fa fa-wind" /> Avg. Max Wind Speed/Day:</span> <strong>{{ stateHazardExtremes.average_wind_speed_max }} mph</strong>
+            </div>
+            <div class="hazard-item">
+              <span><i class="fa fa-wind" /> Max Wind Speed Last Year:</span> <strong>{{ stateHazardExtremes.wind_speed_max }} mph</strong>
+            </div>
           </div>
         </div>
-      </div>
-      <div v-else>
-        <div id="chart-settings" class="card">
-          <h2>Chart Settings</h2>
+        <div v-else>
+          <div id="chart-settings" class="card">
+            <h2>Chart Settings</h2>
 
-          <div style="display: flex;">
-            <div>
-
+            <div style="display: flex;">
               <div>
-                <label for="f-option" class="l-radio">
-                  <input type="radio" id="f-option" @click="heatSelected = true" name="selector" tabindex="1" checked>
-                  <span>Temperature</span>
-                </label>
-                <label for="s-option" class="l-radio">
-                  <input type="radio" id="s-option" @click="heatSelected = false" name="selector" tabindex="2">
-                  <span>Wind</span>
-                </label>
-              </div>
 
-              <div v-if="heatSelected">
-                <label for="a-option" class="l-radio">
-                  <input type="checkbox" id="a-option" v-model="selectedTemps" value="max" tabindex="3">
-                  <span>Max</span>
-                </label>
-                <label for="b-option" class="l-radio">
-                  <input type="checkbox" id="b-option" v-model="selectedTemps" value="min" tabindex="4">
-                  <span>Min</span>
-                </label>
+                <div>
+                  <label for="f-option" class="l-radio">
+                    <input type="radio" id="f-option" @click="heatSelected = true" name="selector" tabindex="1" checked>
+                    <span>Temperature</span>
+                  </label>
+                  <label for="s-option" class="l-radio">
+                    <input type="radio" id="s-option" @click="heatSelected = false" name="selector" tabindex="2">
+                    <span>Wind</span>
+                  </label>
+                </div>
+
+                <div v-if="heatSelected">
+                  <label for="a-option" class="l-radio">
+                    <input type="checkbox" id="a-option" v-model="selectedTemps" value="max" tabindex="3">
+                    <span>Max</span>
+                  </label>
+                  <label for="b-option" class="l-radio">
+                    <input type="checkbox" id="b-option" v-model="selectedTemps" value="min" tabindex="4">
+                    <span>Min</span>
+                  </label>
+                </div>
               </div>
-            </div>
-            <div>
-              <label class="select" for="slct">
-                <select id="slct" v-model="timeSpan" required="required">
-                  <option :value="30">Last Month</option>
-                  <option :value="90">Last Three Months</option>
-                  <option :value="180">Last Six Months</option>
-                  <option :value="360">Last Year</option>
-                </select>
-                <svg>
-                  <use xlink:href="#select-arrow-down"></use>
+              <div>
+                <label class="select" for="slct">
+                  <select id="slct" v-model="timeSpan" required="required">
+                    <option :value="30">Last Month</option>
+                    <option :value="90">Last Three Months</option>
+                    <option :value="180">Last Six Months</option>
+                    <option :value="360">Last Year</option>
+                  </select>
+                  <svg>
+                    <use xlink:href="#select-arrow-down"></use>
+                  </svg>
+                </label>
+                <!-- SVG Sprites-->
+                <svg class="sprites">
+                  <symbol id="select-arrow-down" viewbox="0 0 10 6">
+                    <polyline points="1 1 5 5 9 1"></polyline>
+                  </symbol>
                 </svg>
-              </label>
-              <!-- SVG Sprites-->
-              <svg class="sprites">
-                <symbol id="select-arrow-down" viewbox="0 0 10 6">
-                  <polyline points="1 1 5 5 9 1"></polyline>
-                </symbol>
-              </svg>
+              </div>
             </div>
-          </div>
 
-        </div>
-        <svg id="chart"></svg>
+          </div>
+          <svg id="chart"></svg>
         </div>
       </div>
+    </div>
     </div>
 </template>
 
@@ -627,6 +639,60 @@ onMounted(async () => {
   user-select: none;
 }
 
+
+.loader {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: inline-block;
+  position: relative;
+  border: 3px solid;
+  border-color: #3f947d #3f947d transparent transparent;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+.loader::after,
+.loader::before {
+  content: '';
+  box-sizing: border-box;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  border: 3px solid;
+  border-color: transparent transparent rgba(63, 148, 125, 0.65) rgba(63, 148, 125, 0.65);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  animation: rotationBack 0.5s linear infinite;
+  transform-origin: center center;
+}
+.loader::before {
+  width: 32px;
+  height: 32px;
+  border-color: #3f947d #3f947d transparent transparent;
+  animation: rotation 1.5s linear infinite;
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes rotationBack {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg);
+  }
+}
 
 </style>
 

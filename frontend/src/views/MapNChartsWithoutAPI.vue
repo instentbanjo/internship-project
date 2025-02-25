@@ -402,56 +402,64 @@ onMounted(async () => {
         </div>
         <div v-else>
           <div id="chart-settings" class="card">
-            <h2>Chart Settings</h2>
-
-            <div style="display: flex;">
-              <div>
-
+            <div style="display: flex; justify-content: center; align-items: center; width: 100%; position: relative;">
+              <!-- Centered Section -->
+              <div style="display: flex; flex-direction: column; align-items: center;">
                 <div>
                   <label for="f-option" class="l-radio">
-                    <input type="radio" id="f-option" @click="heatSelected = true" name="selector" tabindex="1" checked>
-                    <span>Temperature</span>
+                    <button class="tab-button" @click="heatSelected = true">Temperature</button>
                   </label>
                   <label for="s-option" class="l-radio">
-                    <input type="radio" id="s-option" @click="heatSelected = false" name="selector" tabindex="2">
-                    <span>Wind</span>
+                    <button class="tab-button" @click="heatSelected = false">Wind</button>
                   </label>
                 </div>
-
-                <div v-if="heatSelected">
-                  <label for="a-option" class="l-radio">
-                    <input type="checkbox" id="a-option" v-model="selectedTemps" value="max" tabindex="3">
-                    <span>Max</span>
+                <div>
+                  <label class="select" for="slct">
+                    <select id="slct" v-model="timeSpan" required="required">
+                      <option :value="30">Last Month</option>
+                      <option :value="90">Last Three Months</option>
+                      <option :value="180">Last Six Months</option>
+                      <option :value="360">Last Year</option>
+                    </select>
+                    <svg>
+                      <use xlink:href="#select-arrow-down"></use>
+                    </svg>
                   </label>
-                  <label for="b-option" class="l-radio">
-                    <input type="checkbox" id="b-option" v-model="selectedTemps" value="min" tabindex="4">
-                    <span>Min</span>
-                  </label>
-                </div>
-              </div>
-              <div>
-                <label class="select" for="slct">
-                  <select id="slct" v-model="timeSpan" required="required">
-                    <option :value="30">Last Month</option>
-                    <option :value="90">Last Three Months</option>
-                    <option :value="180">Last Six Months</option>
-                    <option :value="360">Last Year</option>
-                  </select>
-                  <svg>
-                    <use xlink:href="#select-arrow-down"></use>
+                  <!-- SVG Sprites-->
+                  <svg class="sprites">
+                    <symbol id="select-arrow-down" viewBox="0 0 10 6">
+                      <polyline points="1 1 5 5 9 1"></polyline>
+                    </symbol>
                   </svg>
-                </label>
-                <!-- SVG Sprites-->
-                <svg class="sprites">
-                  <symbol id="select-arrow-down" viewbox="0 0 10 6">
-                    <polyline points="1 1 5 5 9 1"></polyline>
-                  </symbol>
-                </svg>
+                </div>
               </div>
+
+              <!-- Right-aligned Section (Independent Position) -->
+              <div v-if="heatSelected" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex;flex-direction: column; gap: 10px;">
+                <label for="a-option" class="l-radio" style="display: flex; align-items: center;">
+                  <input type="checkbox" id="a-option" v-model="selectedTemps" value="max" tabindex="3" class="temp-checkbox max">
+                  <span class="line max-line"></span>
+                  <span>Max. Temp</span>
+                </label>
+                <label for="b-option" class="l-radio" style="display: flex; align-items: center;">
+                  <input type="checkbox" id="b-option" v-model="selectedTemps" value="min" tabindex="4" class="temp-checkbox min">
+                  <span class="line min-line"></span>
+                  <span>Min. Temp</span>
+                </label>
+              </div>
+              <div v-else style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex;flex-direction: column; gap: 10px;">
+                <label class="l-radio" style="display: flex; align-items: center;">
+                  <input type="checkbox"  tabindex="4" checked disabled class="temp-checkbox min">
+                  <span class="line wind-line"></span>
+                  <span>Wind Speed</span>
+                </label>
+              </div>
+            </div>
+            <div style="display: flex;">
+              <svg id="chart"></svg>
             </div>
 
           </div>
-          <svg id="chart"></svg>
         </div>
       </div>
     </div>
@@ -541,46 +549,8 @@ onMounted(async () => {
   transform: scale(0.98);
 }
 
-
-
-.l-radio {
-  padding: 6px;
-  border-radius: 50px;
-  display: inline-flex;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  margin: 8px 0;
-  -webkit-tap-highlight-color: transparent;
-}
-.l-radio:hover, .l-radio:focus-within {
-  background: rgba(159, 159, 159, 0.1);
-}
-.l-radio input {
-  vertical-align: middle;
-  width: 20px;
-  height: 20px;
-  border-radius: 10px;
-  background: none;
-  border: 0;
-  box-shadow: inset 0 0 0 1px #9F9F9F;
-  box-shadow: inset 0 0 0 1.5px #9F9F9F;
-  appearance: none;
-  padding: 0;
-  margin: 0;
-  transition: box-shadow 150ms cubic-bezier(0.95, 0.15, 0.5, 1.25);
-  pointer-events: none;
-}
-.l-radio input:focus {
-  outline: none;
-}
-.l-radio input:checked {
-  box-shadow: inset 0 0 0 6px #6743ee;
-}
-.l-radio span {
-  vertical-align: middle;
-  display: inline-block;
-  line-height: 20px;
-  padding: 0 8px;
+.tab-button{
+  border-style: none;
 }
 
 .select {
@@ -693,6 +663,73 @@ onMounted(async () => {
     transform: rotate(-360deg);
   }
 }
+
+
+.tab-button {
+  transition: all 0.3s ease-in-out;
+  font-weight: 500;
+}
+.tab-button:hover {
+  background-color: #f3f4f6;
+}
+.tab-button.active {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+.tab-content {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-top: 0.5rem;
+}
+
+
+
+.temp-checkbox {
+  display: none; /* Hide the default checkbox */
+}
+
+.l-radio {
+  display: flex;
+  align-items: center;
+}
+
+.line {
+  height: 2px;
+  width: 20px;
+  margin-right: 5px;
+  transition: width 0.3s, opacity 0.3s;
+}
+
+.max-line {
+  background-color: red;
+}
+
+.min-line {
+  background-color: blue;
+}
+
+.wind-line{
+  background-color: lime;
+}
+
+.temp-checkbox:checked + .line {
+  width: 30px;
+}
+
+.temp-checkbox:checked + .line + span {
+  font-weight: bold;
+}
+
+.temp-checkbox:not(:checked) + .line {
+  opacity: 0.5;
+}
+
+.temp-checkbox:not(:checked) + .line + span {
+  color: grey;
+}
+
 
 </style>
 

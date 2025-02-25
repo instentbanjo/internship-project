@@ -71,7 +71,17 @@ const updateStateWeather = async (req, res) => {
       fs.mkdirSync(dirPath, { recursive: true });
     }
 
+    if (!fs.existsSync(filePath)) {
+      console.log('Creating new weather data file');
+      fs.writeFileSync(filePath, JSON.stringify(weatherData), 'utf8');
+    }
+
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    weatherData = JSON.parse(fileContent);
+
+    console.log(weatherData)
     weatherData[state] = averageInState;
+    console.log(weatherData)
 
     fs.writeFileSync(filePath, JSON.stringify(weatherData, null, 2), 'utf8');
 

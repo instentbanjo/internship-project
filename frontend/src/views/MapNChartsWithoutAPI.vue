@@ -3,8 +3,8 @@ import {
   shallowRef,
   onMounted,
   nextTick,
-  watch
-} from 'vue';
+  watch, ref
+} from "vue";
 import "leaflet/dist/leaflet.css";
 import * as L from 'leaflet';
 import * as d3 from 'd3'
@@ -16,17 +16,17 @@ import {
 const initialMap = shallowRef(null); // Only track root, not deep reactivity
 const polygons = shallowRef([]); // Store immutable GeoJSON data
 
-const selectedState = shallowRef('');
-const selectedWeatherData = shallowRef();
-const stateHazardExtremes = shallowRef();
-const cardSelected = shallowRef('details');
+const selectedState = ref('');
+const selectedWeatherData = ref();
+const stateHazardExtremes = ref();
+const cardSelected = ref('details');
 
-const isLoading = shallowRef(false)
+const isLoading = ref(false)
 
-const heatSelected = shallowRef(true);
-const selectedTemps = shallowRef(['min', 'max']);  // Array to track selected options
+const heatSelected = ref(true);
+const selectedTemps = ref(['min', 'max']);  // Array to track selected options
 
-const timeSpan = shallowRef(30);
+const timeSpan = ref(30);
 
 watch(timeSpan, () => {
   drawChart();
@@ -168,7 +168,7 @@ const drawChart = async () => {
   g.append("text")
     .attr("class", "axis-label")
     .attr("x", (width - margin.left - margin.right) / 2)
-    .attr("y", height - margin.bottom + 40) // Position below the x-axis
+    .attr("y", height - margin.bottom + 50) // Position below the x-axis
     .style("text-anchor", "middle")
     .style("font-size", "14px")
     .style("fill", "#333")
@@ -407,10 +407,10 @@ onMounted(async () => {
               <div style="display: flex; flex-direction: column; align-items: center;">
                 <div style="display: flex">
                   <label for="f-option" class="l-radio">
-                    <button class="button-4" @click="heatSelected = true">Temperature</button>
+                    <button class="button-4" :class="{'selected-4': heatSelected}" @click="heatSelected = true">Temperature</button>
                   </label>
                   <label for="s-option" class="l-radio">
-                    <button class="button-4" @click="heatSelected = false">Wind</button>
+                    <button class="button-4" :class="{'selected-4': !heatSelected}" @click="heatSelected = false">Wind</button>
                   </label>
                 </div>
                 <div>
@@ -695,6 +695,11 @@ onMounted(async () => {
   align-items: center;
 }
 
+.l-radio > span{
+  font-weight: bold;
+  cursor: pointer;
+}
+
 .line {
   height: 2px;
   width: 20px;
@@ -714,13 +719,6 @@ onMounted(async () => {
   background-color: lime;
 }
 
-.temp-checkbox:checked + .line {
-  width: 30px;
-}
-
-.temp-checkbox:checked + .line + span {
-  font-weight: bold;
-}
 
 .temp-checkbox:not(:checked) + .line {
   opacity: 0.5;
@@ -756,6 +754,12 @@ onMounted(async () => {
   vertical-align: middle;
   white-space: nowrap;
   word-wrap: break-word;
+}
+
+.selected-4{
+  background-color: #3f947d;
+  border-color: #3f947d;
+  color: #ffffff;
 }
 
 .button-4:hover {

@@ -195,6 +195,15 @@ const getStatePolygon = (state) => {
     return multiPolygon(currentState.geometry.coordinates, { name: currentState.properties.name });
   }
 }
+
+const standardDeviation = (arr) => {
+  let mean = arr.reduce((sum, value) => sum + value, 0) / arr.length;
+  let squaredDiffs = arr.map(value => (value - mean) ** 2);
+  let variance = squaredDiffs.reduce((sum, value) => sum + value, 0) / arr.length;
+  return Math.sqrt(variance);
+}
+
+
 const findPointState = (coord) => {
   for (const feature of statesData.features) {
     if (isPointInStatePoly(coord, feature)) {
@@ -297,5 +306,6 @@ module.exports = {
   getAllStatePolys,
   isPointInStatePoly,
   getConsistentPointsInState,
-  getSamplePointsInState
+  getSamplePointsInState,
+  standardDeviation
 };

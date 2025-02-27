@@ -1,4 +1,4 @@
-const { getAveragePrecipitationForState, getYearlyWeatherDataForState } = require("../utils/geomath");
+const { getYearlyWeatherDataForState, standardDeviation } = require("../utils/geomath");
 const fs = require('fs');
 const path = require('path');
 
@@ -52,6 +52,54 @@ const getStateWeather = async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 };
+const getStateStandardDeviation = async (req, res) => {
+  const { state } = req.query;
+  if (!state) {
+    res.status(400).send(`Bad Request, query: ${state}`);
+    return;
+  }
+  try {
+    const data = fs.readFileSync(path.join(__dirname, '../data/weatherData/us-states-weather-data.json'), 'utf8');
+    const weatherData = JSON.parse(data);
+    if (weatherData[state]) {
+      res.status(200).json(
+        {
+          temperature_2m_max_standard_deviation: standardDeviation(weatherData[state].temperature_2m_max),
+          temperature_2m_min_standard_deviation: standardDeviation(weatherData[state].temperature_2m_min),
+        }
+      );
+    } else {
+      res.status(404).json(`Weather data not found for state ${state}`);
+    }
+  } catch (error) {
+    console.error('Error fetching weather data from file:', error);
+    res.status(500).send('Internal Server Error');
+  }
+};
+const getStateExtremes = async (req, res) => {
+  const { state } = req.query;
+  if (!state) {
+    res.status(400).send(`Bad Request, query: ${state}`);
+    return;
+  }
+  try {
+    const data = fs.readFileSync(path.join(__dirname, '../data/weatherData/us-states-weather-data.json'), 'utf8');
+    const weatherData = JSON.parse(data);
+    if (weatherData[state]) {
+      res.status(200).json(
+        {
+          temperature_2m_max_standard_deviation: standardDeviation(weatherData[state].temperature_2m_max),
+          temperature_2m_min_standard_deviation: standardDeviation(weatherData[state].temperature_2m_min),
+        }
+      );
+    } else {
+      res.status(404).json(`Weather data not found for state ${state}`);
+    }
+  } catch (error) {
+    console.error('Error fetching weather data from file:', error);
+    res.status(500).send('Internal Server Error');
+  }
+};
 
 const updateStateWeather = async (req, res) => {
   const { state } = req.body;
@@ -96,5 +144,6 @@ const updateStateWeather = async (req, res) => {
 module.exports = {
   getStateAveragePrecipitation,
   getStateWeather,
-  updateStateWeather
+  updateStateWeather,
+  getStateStandardDeviation
 };

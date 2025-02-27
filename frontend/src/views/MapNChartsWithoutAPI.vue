@@ -360,8 +360,20 @@ onMounted(async () => {
 
 <template>
   <div>
-    <h1>Map N Chart</h1>
+    <h1>Final</h1>
     <div id="map"></div>
+    <div v-if="!selectedState" class="card">
+      <h2>How it works</h2>
+      <p>
+        <b>Click</b> on a state on the map to view its weather data.
+      </p>
+      <p>
+        The first click may take a few seconds to load the data.
+      </p>
+      <p>
+        You can eiter look at the hazards data overview or the chart for more details.
+      </p>
+    </div>
     <h2 v-if="selectedState">{{ selectedState }}</h2>
     <div v-if="isLoading" style="display:flex;flex-direction: column;align-items: center">
       <p>Loading...</p>
@@ -372,7 +384,7 @@ onMounted(async () => {
     <div v-else>
       <div v-if="stateHazardExtremes">
         <button class="switch-btn" @click="switchView">
-          Switch View
+          {{ cardSelected === 'details' ? 'Show Chart' : 'Show Details' }}
         </button>
         <div v-if="cardSelected !== 'chart'" class="card">
           <h2>Hazard Data for {{ selectedState }}</h2>
@@ -407,10 +419,10 @@ onMounted(async () => {
               <div style="display: flex; flex-direction: column; align-items: center;">
                 <div style="display: flex">
                   <label for="f-option" class="l-radio">
-                    <button class="button-4" :class="{'selected-4': heatSelected}" @click="heatSelected = true">Temperature</button>
+                    <button class="button-4" :class="{'selected-4': heatSelected, 'unselected-4': !heatSelected}" @click="heatSelected = true">Temperature</button>
                   </label>
                   <label for="s-option" class="l-radio">
-                    <button class="button-4" :class="{'selected-4': !heatSelected}" @click="heatSelected = false">Wind</button>
+                    <button class="button-4" :class="{'selected-4': !heatSelected, 'unselected-4': heatSelected}" @click="heatSelected = false">Wind</button>
                   </label>
                 </div>
                 <div>
@@ -731,12 +743,10 @@ onMounted(async () => {
 
 .button-4 {
   appearance: none;
-  background-color: #FAFBFC;
-  border: 1px solid rgba(27, 31, 35, 0.15);
+  border: 1px solid;
   border-radius: 6px;
   box-shadow: rgba(27, 31, 35, 0.04) 0 1px 0, rgba(255, 255, 255, 0.25) 0 1px 0 inset;
   box-sizing: border-box;
-  color: #24292E;
   cursor: pointer;
   display: inline-block;
   font-family: -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
@@ -756,13 +766,25 @@ onMounted(async () => {
   word-wrap: break-word;
 }
 
+.unselected-4{
+  background-color: #FAFBFC;
+  border-color: rgba(27, 31, 35, 0.15);
+  color: #24292E;
+
+}
 .selected-4{
   background-color: #3f947d;
   border-color: #3f947d;
   color: #ffffff;
 }
 
-.button-4:hover {
+.selected-4:hover {
+  background-color: #1c5b4a;
+  text-decoration: none;
+  transition-duration: 0.1s;
+}
+
+.unselected-4:hover {
   background-color: #F3F4F6;
   text-decoration: none;
   transition-duration: 0.1s;

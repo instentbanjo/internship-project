@@ -24,12 +24,12 @@ export default {
 
 
     <SidebarLink to="/" icon="fas fa-home">Home</SidebarLink>
-    <SidebarLink to="/coordinates" icon="fas fa-location-dot">Coordinates</SidebarLink>
-    <SidebarLink to="/weatherAPI" icon="fas fa-cloud-sun-rain">Weather API</SidebarLink>
-    <SidebarLink to="/mapSelect" icon="fas fa-map-location-dot">Map Select</SidebarLink>
-    <SidebarLink to="/hazardMap" icon="fas fa-map">Hazard Map</SidebarLink>
-    <SidebarLink to="/mapCharts" icon="fas fa-chart-line">Map N Chart</SidebarLink>
-    <SidebarLink to="/mapChartsWOAPI" icon="fas fa-chart-line">Map N Chart</SidebarLink>
+    <SidebarLink to="/coordinates" icon="fas fa-location-dot">Step 1</SidebarLink>
+    <SidebarLink to="/weatherAPI" icon="fas fa-cloud-sun-rain">Step 2</SidebarLink>
+    <SidebarLink to="/mapSelect" icon="fas fa-map-location-dot">Step 3</SidebarLink>
+    <SidebarLink to="/hazardMap" icon="fas fa-map">Step 4</SidebarLink>
+    <SidebarLink to="/mapCharts" icon="fas fa-chart-line">Almost Final</SidebarLink>
+    <SidebarLink to="/mapChartsWOAPI" icon="fas fa-chart-line">Final</SidebarLink>
 
     <span
       class="collapse-icon"

@@ -61,9 +61,15 @@ const getWeatherDataForState = async (state) => {
       "Content-Type": "application/json"
     },
   });
+  let deviation_response = await fetch(`http://localhost:5001/weather/state/standardDeviation?state=${encodeURIComponent(state)}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json"
+    },
+  });
 
 
-  if (!response.ok) {
+  if (!response.ok || !deviation_response.ok) {
     console.error("GET request failed. Updating the database...");
 
     // Send a POST request to update the DB
@@ -96,7 +102,10 @@ const getWeatherDataForState = async (state) => {
     }
   }
 
-  return await response.json();
+  const responseJson = await response.json();
+  const deviation_responseJson = await deviation_response.json();
+  responseJson.standardDeviation = deviation_responseJson;
+  return responseJson;
 };
 const getWeatherExtremesForState = () => {
   const data = selectedWeatherData.value;
@@ -139,6 +148,11 @@ const drawChart = async () => {
 
   const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
   const data = getChartData();
+
+  const averageMaxTemp = d3.mean(selectedWeatherData.value.temperature_2m_max)
+  const averageMinTemp = d3.mean(selectedWeatherData.value.temperature_2m_min)
+  const averageWindSpeed = d3.mean(selectedWeatherData.value.wind_speed_10m_max)
+
 
   // Scale setup
   const x = d3.scaleTime()
@@ -201,6 +215,16 @@ const drawChart = async () => {
 
   // Draw Lines
   if (heatSelected.value) {
+
+    const shadedAreaY0 = y(averageMaxTemp + selectedWeatherData.value.standardDeviation.temperature_2m_max_standard_deviation);
+    const shadedAreaY1 = y(averageMinTemp - selectedWeatherData.value.standardDeviation.temperature_2m_min_standard_deviation);
+    g.append("rect")
+      .attr("x", 0)
+      .attr("y", shadedAreaY0) // Top of the area
+      .attr("width", width - margin.left - margin.right)
+      .attr("height", shadedAreaY1 - shadedAreaY0) // Height of the area
+      .attr("fill", "rgba(173, 216, 230, 0.3)"); // Light blue, 30% opacity
+
     if (selectedTemps.value.includes("max")) {
       g.append("path")
         .datum(data)
@@ -208,6 +232,16 @@ const drawChart = async () => {
         .attr("stroke", "red")
         .attr("stroke-width", 2)
         .attr("d", maxTemperatureLine);
+
+      g.append("line")
+        .attr("x1", 0)
+        .attr("x2", width - margin.left - margin.right)
+        .attr("y1", y(averageMaxTemp))
+        .attr("y2", y(averageMaxTemp))
+        .attr("stroke", "red")
+        .attr("stroke-dasharray", "4 4")
+        .attr("stroke-width", 2);
+
     }
     if (selectedTemps.value.includes("min")) {
       g.append("path")
@@ -216,6 +250,16 @@ const drawChart = async () => {
         .attr("stroke", "steelblue")
         .attr("stroke-width", 2)
         .attr("d", minTemperatureLine);
+
+      g.append("line")
+        .attr("x1", 0)
+        .attr("x2", width - margin.left - margin.right)
+        .attr("y1", y(averageMinTemp))
+        .attr("y2", y(averageMinTemp))
+        .attr("stroke", "blue")
+        .attr("stroke-dasharray", "4 4")
+        .attr("stroke-width", 2);
+
     }
   } else {
     g.append("path")
@@ -224,6 +268,16 @@ const drawChart = async () => {
       .attr("stroke", "lime")
       .attr("stroke-width", 2)
       .attr("d", maxWindLine);
+
+
+    g.append("line")
+      .attr("x1", 0)
+      .attr("x2", width - margin.left - margin.right)
+      .attr("y1", y(averageWindSpeed))
+      .attr("y2", y(averageWindSpeed))
+      .attr("stroke", "lime")
+      .attr("stroke-dasharray", "4 4")
+      .attr("stroke-width", 2);
   }
 
   // Tooltip

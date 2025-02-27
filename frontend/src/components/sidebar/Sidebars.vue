@@ -30,6 +30,7 @@ export default {
     <SidebarLink to="/hazardMap" icon="fas fa-map">Step 4</SidebarLink>
     <SidebarLink to="/mapCharts" icon="fas fa-chart-line">Almost Final</SidebarLink>
     <SidebarLink to="/mapChartsWOAPI" icon="fas fa-chart-line">Final</SidebarLink>
+    <SidebarLink to="/nextSteps" icon="fas fa-calendar-days">Next Steps</SidebarLink>
 
     <span
       class="collapse-icon"

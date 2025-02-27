@@ -6,6 +6,7 @@ import MapSelect from "@/views/MapSelect.vue";
 import HazardMap from "@/views/HazardMap.vue";
 import MapNCharts from "@/views/MapNCharts.vue";
 import MapNChartsWithoutAPI from "@/views/MapNChartsWithoutAPI.vue";
+import NextSteps from "@/views/NextSteps.vue";
 
 const routes = [
   {
@@ -42,6 +43,11 @@ const routes = [
     path: "/mapChartsWOAPI",
     name: "mapChartsWOAPI",
     component:MapNChartsWithoutAPI,
+  },
+  {
+    path: "/nextSteps",
+    name: "nextSteps",
+    component:NextSteps,
   },
 ];
 

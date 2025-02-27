@@ -370,9 +370,6 @@ onMounted(async () => {
       <p>
         The first click may take a few seconds to load the data.
       </p>
-      <p>
-        You can eiter look at the hazards data overview or the chart for more details.
-      </p>
     </div>
     <h2 v-if="selectedState">{{ selectedState }}</h2>
     <div v-if="isLoading" style="display:flex;flex-direction: column;align-items: center">
